@@ -1,8 +1,6 @@
 # VWO Feature Management and Experimentation SDK for Ruby
 
 [![Gem version](https://badge.fury.io/rb/vwo-fme-ruby-sdk.svg)](https://rubygems.org/gems/vwo-fme-ruby-sdk)
-[![CI](https://github.com/wingify/vwo-fme-ruby-sdk/workflows/CI/badge.svg?branch=master)](https://github.com/wingify/vwo-fme-ruby-sdk/actions?query=workflow%3ACI)
-[![codecov](https://codecov.io/gh/wingify/vwo-ruby-sdk/branch/master/graph/badge.svg?token=6F5QQEGO5Q)](https://codecov.io/gh/wingify/vwo-fme-ruby-sdk)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 
 ## Requirements
