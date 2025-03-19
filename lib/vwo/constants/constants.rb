@@ -13,16 +13,11 @@
 # limitations under the License.
 
 # Constants file for Ruby SDK
-  
+
 # Define the Constants module
 module Constants
-  package_file = {
-    name: 'vwo-fme-ruby-sdk',
-    version: '1.0.0'
-  }
-
-  SDK_NAME = package_file[:name].freeze
-  SDK_VERSION = package_file[:version].freeze
+  SDK_NAME = 'vwo-fme-ruby-sdk'.freeze
+  SDK_VERSION = '1.1.0'.freeze
 
   MAX_TRAFFIC_PERCENT = 100
   MAX_TRAFFIC_VALUE = 10_000
@@ -57,4 +52,3 @@ module Constants
   SHOULD_USE_THREADING = true
   MAX_POOL_SIZE = 5
 end
-  

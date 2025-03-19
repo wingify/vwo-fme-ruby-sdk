@@ -10,6 +10,6 @@ gem 'json', '~> 2.5'
 group :development, :test do
   # Add any other test-specific gems you need here
   gem 'minitest', '~> 5.0'
-  gem 'mocha', '~> 1.11'
+  gem 'mocha', '~> 2.7'
   gem 'rake', '~> 13.0'
 end
