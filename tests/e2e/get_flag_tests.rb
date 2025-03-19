@@ -55,11 +55,12 @@ class VWOClientTest < Minitest::Test
   def run_tests(tests, storage_map)
     tests.each do |test_data|
         storage = StorageTest.new
+        threading = { enabled: false }
         settings = JSON.parse(@settings_map[test_data['settings']])
         VWOBuilder.any_instance.stubs(:get_settings).returns(settings)
-        @options = { sdk_key: 'test_sdk_key', account_id: 12345}
+        @options = { sdk_key: 'test_sdk_key', account_id: 12345, threading: threading}
         if (storage_map)
-            @options = { sdk_key: 'test_sdk_key', account_id: 12345, storage: storage}
+            @options = { sdk_key: 'test_sdk_key', account_id: 12345, storage: storage, threading: threading}
         end
         Storage.instance.attach_connector(@options[:storage])
         @vwo_instance = VWO.init(@options)

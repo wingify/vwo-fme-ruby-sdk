@@ -11,7 +11,7 @@ The **VWO Feature Management and Experimentation SDK** (VWO FME Ruby SDK) enable
 
 ## Requirements
 
-- **Ruby 2.7 or later**
+- **Ruby 2.6 or later**
 
 ## Installation
 

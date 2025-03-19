@@ -30,7 +30,8 @@ class VWOClientTest < Minitest::Test
     @test_cases = TestDataReader.new.test_cases
     settings = JSON.parse(@settings_map[@test_cases["GETFLAG_WITHOUT_STORAGE"][0]['settings']])
     VWOBuilder.any_instance.stubs(:get_settings).returns(settings)
-    @options = { sdk_key: 'test_sdk_key', account_id: 12345}
+    threading = { enabled: false }
+    @options = { sdk_key: 'test_sdk_key', account_id: 12345, threading: threading}
     @vwo_instance = VWO.init(@options)
   end
 

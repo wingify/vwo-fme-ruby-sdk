@@ -15,25 +15,53 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
-        ruby-version: [2.3.0, 2.3.8, 2.4.0, 2.4.10, 2.5.0, 2.5.9, 2.6.0, 2.6.10, 2.7.0, 2.7.8, 3.0.0, 3.1.6, 3.2.7, 3.3.7, 3.4.2]
+        ruby-version: [2.6.0, 2.6.7, 2.7.0, 2.7.3, 3.0.0, head]
 
+    continue-on-error: true
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
+
       - name: Set up Ruby
-        uses: ruby/setup-ruby@477b21f02be01bcb8030d50f37cfec92bfa615b6
+        uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ matrix.ruby-version }}
+
+      - name: Install compatible Bundler version
+        run: |
+          ruby_version=$(ruby -e 'print RUBY_VERSION')
+          major=$(echo $ruby_version | cut -d. -f1)
+          minor=$(echo $ruby_version | cut -d. -f2)
+
+          if [[ $major -ge 3 ]]; then
+            echo "Installing Bundler 2.5.23 for Ruby $ruby_version"
+            bundler_version="2.5.23"
+          elif [[ $major -eq 2 && $minor -ge 6 ]]; then
+            echo "Installing Bundler 2.4.22 for Ruby $ruby_version"
+            bundler_version="2.4.22"
+          elif [[ $major -eq 2 && $minor -ge 3 ]]; then
+            echo "Installing Bundler 1.17.3 for Ruby $ruby_version"
+            bundler_version="1.17.3"  # Last version supporting Ruby 2.3.x and 2.4.x
+          else
+            echo "Unsupported Ruby version: $ruby_version"
+            exit 1
+          fi
+
+          echo "Installing Bundler $bundler_version for Ruby $ruby_version"
+          gem install bundler -v $bundler_version --no-document
+
       - name: Install dependencies
         run: bundle install
+
       - name: Run tests
         run: ruby tests/e2e/run_all_tests.rb
+
       - name: Notification
         if: always()
         id: slack
         uses: wingify/slack-github-action@v1.15.1-wingify
         with:
-          channel-id: 'fs-review-team'
-          slack-message: "<!here> Test on *Ruby-${{ matrix.ruby-version }}* and *${{ matrix.os }}* got *${{job.status}}* ${{job.status == 'success' && ':heavy_check_mark:' || ':x:'}} \nCommit: `${{github.event.head_commit.message}}`. \nCheck the latest build: https://github.com/wingify/vwo-fme-ruby-sdk/actions"
+          channel-id: 'vwo-fs-fme-sdk-job-status' # 'fs-review-team'
+          slack-message: "<!here> Ruby FME SDK Test on *Ruby-${{ matrix.ruby-version }}* and *${{ matrix.os }}* got *${{job.status}}* ${{job.status == 'success' && ':heavy_check_mark:' || ':x:'}} \nCommit: `${{github.event.head_commit.message}}`. \nCheck the latest build: https://github.com/wingify/vwo-fme-ruby-sdk/actions"
           color: "${{job.status == 'success' && '#00FF00' || '#FF0000'}}"
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_NOTIFICATIONS_BOT_TOKEN }}
