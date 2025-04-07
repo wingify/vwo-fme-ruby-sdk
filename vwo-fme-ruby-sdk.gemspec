@@ -1,6 +1,6 @@
 Gem::Specification.new do |spec|
     spec.name          = 'vwo-fme-ruby-sdk'
-    spec.version       = '1.1.0'
+    spec.version       = '1.2.0'
     spec.authors       = ['VWO']
     spec.email         = ['dev@wingify.com']
 
@@ -8,7 +8,7 @@ Gem::Specification.new do |spec|
     spec.description   = 'A Ruby SDK for Feature Management And Experimentation'
     spec.license       = 'Apache-2.0'
 
-    spec.files         = Dir['lib/**/*.rb']
+    spec.files         = Dir['lib/**/*.rb', 'lib/**/*.json']
     spec.require_paths = ['lib']
 
     spec.metadata = {

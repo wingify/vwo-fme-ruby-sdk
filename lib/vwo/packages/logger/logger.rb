@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # logger.rb
-class Logger
+class VWOLogger
     # Abstract method definitions for logging at different levels
     def trace(message)
       raise NotImplementedError, "You must implement the trace method"

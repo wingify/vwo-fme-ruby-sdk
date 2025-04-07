@@ -18,7 +18,7 @@ require_relative '../logger'
 require_relative 'transport_manager'
 require_relative '../transports/console_transport'
 
-class LogManager < Logger
+class LogManager < VWOLogger
     @instance = nil
 
     # Use the `instance` method to initialize and get the instance
