@@ -1,9 +1,10 @@
 # VWO Feature Management and Experimentation SDK for Ruby
 
-[![Gem Version](https://badge.fury.io/rb/vwo-fme-ruby-sdk.svg)](https://rubygems.org/gems/vwo-fme-ruby-sdk)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
-[![Build Status](https://github.com/wingify/vwo-fme-ruby-sdk/workflows/CI/badge.svg)](https://github.com/wingify/vwo-fme-ruby-sdk/actions)
-[![Coverage Status](https://codecov.io/gh/wingify/vwo-fme-ruby-sdk/branch/master/graph/badge.svg)](https://codecov.io/gh/wingify/vwo-fme-ruby-sdk)
+[![Gem Version](https://img.shields.io/gem/v/vwo-fme-ruby-sdk?style=for-the-badge)](https://rubygems.org/gems/vwo-fme-ruby-sdk)
+[![License](https://img.shields.io/github/license/wingify/vwo-fme-ruby-sdk?style=for-the-badge&color=blue)](http://www.apache.org/licenses/LICENSE-2.0)
+
+[![CI](https://img.shields.io/github/actions/workflow/status/wingify/vwo-fme-ruby-sdk/main.yml?style=for-the-badge&logo=github)](https://github.com/wingify/vwo-fme-ruby-sdk/actions?query=workflow%3ACI)
+[![codecov](https://img.shields.io/codecov/c/github/wingify/vwo-fme-ruby-sdk?token=813UYYMWGM&style=for-the-badge&logo=codecov)](https://codecov.io/gh/wingify/vwo-fme-ruby-sdk)
 
 ## Overview
 

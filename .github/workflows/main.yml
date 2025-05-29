@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [ master, github-action ]
+    branches: [ master, github-action, add-codecov ]
   pull_request:
     branches: [ master ]
 
@@ -53,7 +53,12 @@ jobs:
         run: bundle install
 
       - name: Run tests
-        run: ruby tests/e2e/run_all_tests.rb
+        run: bundle exec rake
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Notification
         if: always()

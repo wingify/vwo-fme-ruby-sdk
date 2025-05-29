@@ -12,4 +12,6 @@ group :development, :test do
   gem 'minitest', '~> 5.0'
   gem 'mocha', '~> 2.7'
   gem 'rake', '~> 13.0'
+  gem 'simplecov'
+  gem 'simplecov-cobertura'
 end

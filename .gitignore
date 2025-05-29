@@ -3,3 +3,4 @@
 .DS_STORE
 *.gem
 *.lock
+coverage/
