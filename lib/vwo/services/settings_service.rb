@@ -1,4 +1,4 @@
-# Copyright 2025 Wingify Software Pvt. Ltd.
+# Copyright 2024-2025 Wingify Software Pvt. Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ require_relative '../enums/log_level_enum'
 require_relative '../models/schemas/settings_schema_validation'
 
 class SettingsService
-  attr_accessor :sdk_key, :account_id, :expiry, :network_timeout, :hostname, :port, :protocol, :is_gateway_service_provided
+  attr_accessor :sdk_key, :account_id, :expiry, :network_timeout, :hostname, :port, :protocol, :is_gateway_service_provided, :is_settings_valid
 
   class << self
     attr_accessor :instance
@@ -38,6 +38,7 @@ class SettingsService
     @account_id = options[:account_id]
     @expiry = options.dig(:settings, :expiry) || Constants::SETTINGS_EXPIRY
     @network_timeout = options.dig(:settings, :timeout) || Constants::SETTINGS_TIMEOUT
+    @is_settings_valid = false
 
     if options[:gateway_service] && options[:gateway_service][:url]
       parsed_url = URI.parse(options[:gateway_service][:url].start_with?(Constants::HTTP_PROTOCOL) || options[:gateway_service][:url].start_with?(Constants::HTTPS_PROTOCOL) ? options[:gateway_service][:url] : "#{Constants::HTTPS_PROTOCOL}#{options[:gateway_service][:url]}")
@@ -109,6 +110,7 @@ class SettingsService
       settings = fetch_settings_and_cache_in_storage
       is_valid = SettingsSchema.new.is_settings_valid(settings)
       if is_valid
+        @is_settings_valid = true
         LoggerService.log(LogLevelEnum::INFO, "SETTINGS_FETCH_SUCCESS")
         settings
       else

@@ -1,4 +1,4 @@
-# Copyright 2025 Wingify Software Pvt. Ltd.
+# Copyright 2024-2025 Wingify Software Pvt. Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ require_relative '../utils/rule_evaluation_util'
 require_relative '../utils/impression_util'
 require_relative '../utils/decision_util'
 require_relative '../models/user/get_flag_response'
+require_relative '../packages/storage/storage'
 
 class FlagApi
     # Get the flag for a given feature key and context
@@ -55,34 +56,36 @@ class FlagApi
       }
   
       storage_service = StorageService.new
-      stored_data = StorageDecorator.new.get_feature_from_storage(feature_key, context, storage_service)
-  
-      if stored_data && stored_data[:experiment_variation_id]
-        if stored_data[:experiment_key]
-          variation = CampaignUtil.get_variation_from_campaign_key(settings, stored_data[:experiment_key], stored_data[:experiment_variation_id])
-  
-          if variation
-            LoggerService.log(LogLevelEnum::INFO, "STORED_VARIATION_FOUND", {variationKey: variation.get_key, userId: context.get_id, experimentKey: stored_data[:experiment_key], experimentType: "experiment"})
-            return GetFlagResponse.new(true, variation.get_variables)
+      if Storage.instance.is_storage_enabled
+        stored_data = StorageDecorator.new.get_feature_from_storage(feature_key, context, storage_service)
+    
+        if stored_data && stored_data[:experiment_variation_id]
+          if stored_data[:experiment_key]
+            variation = CampaignUtil.get_variation_from_campaign_key(settings, stored_data[:experiment_key], stored_data[:experiment_variation_id])
+    
+            if variation
+              LoggerService.log(LogLevelEnum::INFO, "STORED_VARIATION_FOUND", {variationKey: variation.get_key, userId: context.get_id, experimentKey: stored_data[:experiment_key], experimentType: "experiment"})
+              return GetFlagResponse.new(true, variation.get_variables)
+            end
           end
-        end
-      elsif stored_data && stored_data[:rollout_key] && stored_data[:rollout_id]
-        variation = CampaignUtil.get_variation_from_campaign_key(settings, stored_data[:rollout_key], stored_data[:rollout_variation_id])
-  
-        if variation
-          LoggerService.log(LogLevelEnum::INFO, "STORED_VARIATION_FOUND", {variationKey: variation.get_key, userId: context.get_id, experimentKey: stored_data[:rollout_key], experimentType: "rollout"})
-          LoggerService.log(LogLevelEnum::DEBUG, "EXPERIMENTS_EVALUATION_WHEN_ROLLOUT_PASSED", {userId: context.get_id})
-  
-          is_enabled = true
-          should_check_for_experiments_rules = true
-          rollout_variation_to_return = variation
-          feature_info = {
-            rollout_id: stored_data[:rollout_id],
-            rollout_key: stored_data[:rollout_key],
-            rollout_variation_id: stored_data[:rollout_variation_id]
-          }
-          evaluated_feature_map[feature_key] = feature_info
-          passed_rules_information.merge!(feature_info)
+        elsif stored_data && stored_data[:rollout_key] && stored_data[:rollout_id]
+          variation = CampaignUtil.get_variation_from_campaign_key(settings, stored_data[:rollout_key], stored_data[:rollout_variation_id])
+    
+          if variation
+            LoggerService.log(LogLevelEnum::INFO, "STORED_VARIATION_FOUND", {variationKey: variation.get_key, userId: context.get_id, experimentKey: stored_data[:rollout_key], experimentType: "rollout"})
+            LoggerService.log(LogLevelEnum::DEBUG, "EXPERIMENTS_EVALUATION_WHEN_ROLLOUT_PASSED", {userId: context.get_id})
+    
+            is_enabled = true
+            should_check_for_experiments_rules = true
+            rollout_variation_to_return = variation
+            feature_info = {
+              rollout_id: stored_data[:rollout_id],
+              rollout_key: stored_data[:rollout_key],
+              rollout_variation_id: stored_data[:rollout_variation_id]
+            }
+            evaluated_feature_map[feature_key] = feature_info
+            passed_rules_information.merge!(feature_info)
+          end
         end
       end
   

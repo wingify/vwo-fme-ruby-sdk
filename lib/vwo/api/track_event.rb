@@ -1,4 +1,4 @@
-# Copyright 2025 Wingify Software Pvt. Ltd.
+# Copyright 2024-2025 Wingify Software Pvt. Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,6 +19,8 @@ require_relative '../services/hooks_service'
 require_relative '../utils/function_util'
 require_relative '../utils/network_util'
 require_relative '../services/logger_service'
+require_relative '../services/batch_event_queue'
+
 class TrackApi
   # Tracks an event with given properties and context.
   # @param settings [SettingsModel] Configuration settings.
@@ -71,7 +73,13 @@ class TrackApi
       context.ip_address
     )
 
-    # Send the prepared payload via POST API request
-    NetworkUtil.send_post_api_request(properties, payload)
+    # check if batching is enabled
+    if BatchEventsQueue.instance
+      # add the payload to the batch events queue
+      BatchEventsQueue.instance.enqueue(payload)
+    else
+      # Send the prepared payload via POST API request
+      NetworkUtil.send_post_api_request(properties, payload)
+    end
   end
 end

@@ -1,4 +1,4 @@
-# Copyright 2025 Wingify Software Pvt. Ltd.
+# Copyright 2024-2025 Wingify Software Pvt. Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,11 +27,24 @@ class NetworkClient
   def initialize(options = {})
     # options for threading
     @should_use_threading = options.key?(:enabled) ? options[:enabled] : Constants::SHOULD_USE_THREADING
-    @thread_pool = Concurrent::FixedThreadPool.new(options.key?(:max_pool_size) ? options[:max_pool_size] : Constants::MAX_POOL_SIZE)
+    @thread_pool = Concurrent::ThreadPoolExecutor.new(
+      # Minimum number of threads to keep alive in the pool
+      min_threads: 1,
+      # Maximum number of threads allowed in the pool, configurable via options or defaults to MAX_POOL_SIZE constant
+      max_threads: options.key?(:max_pool_size) ? options[:max_pool_size] : Constants::MAX_POOL_SIZE,
+      # Maximum number of tasks that can be queued when all threads are busy
+      max_queue: options.key?(:max_queue_size) ? options[:max_queue_size] : Constants::MAX_QUEUE_SIZE,
+      # When queue is full, execute task in the caller's thread rather than rejecting it
+      fallback_policy: :caller_runs
+    )
   end
 
   def get_thread_pool
     @thread_pool
+  end
+
+  def get_should_use_threading
+    @should_use_threading
   end
 
   def get(request_model)
@@ -67,22 +80,24 @@ class NetworkClient
   end
 
   def post(request_model)
-    def execute_post(request_model)
-      url = request_model.get_url + request_model.get_path
-      uri = URI(url)
-      headers = request_model.get_headers  # Directly use the hash from the request model
-      body = JSON.dump(request_model.get_body)
-  
-      request = Net::HTTP::Post.new(uri, headers)  # Pass the hash of headers directly
-      request.body = body
-  
-      response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: uri.scheme == 'https') { |http| http.request(request) }
-  
-      response_model = ResponseModel.new
-      response_model.set_status_code(response.code.to_i)
+    url = request_model.get_url + request_model.get_path
+    uri = URI(url)
+    headers = request_model.get_headers
+    body = JSON.dump(request_model.get_body)
 
-      # Check if the response body is empty or invalid before parsing
-      if response.is_a?(Net::HTTPSuccess) && !response.body.strip.empty?
+    request = Net::HTTP::Post.new(uri, headers)
+    request.body = body
+
+    response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: uri.scheme == 'https') { |http| http.request(request) }
+
+    response_model = ResponseModel.new
+    response_model.set_status_code(response.code.to_i)
+
+    # Check if the response body is empty or invalid before parsing
+    if response.is_a?(Net::HTTPSuccess) && !response.body.strip.empty?
+      # Check if the response body is JSON
+      content_type = response['Content-Type']&.downcase
+      if content_type&.include?('application/json')
         begin
           parsed_data = JSON.parse(response.body)
           response_model.set_data(parsed_data)
@@ -91,17 +106,16 @@ class NetworkClient
           response_model.set_error("Invalid JSON response: #{e.message}")
         end
       else
+        response_model.set_data(response.body)
       end
-    rescue StandardError => e
-      LoggerService.log(LogLevelEnum::ERROR, "POST request failed: #{e.message}", nil)
     end
 
-    # Check if threading is enabled in options
-    if @should_use_threading
-      @thread_pool.post { execute_post(request_model) }
-    else
-      execute_post(request_model)
-    end
+    response_model
+  rescue StandardError => e
+    LoggerService.log(LogLevelEnum::ERROR, "POST request failed: #{e.message}", nil)
+    response_model = ResponseModel.new
+    response_model.set_error(e.message)
+    response_model
   end
   
 end

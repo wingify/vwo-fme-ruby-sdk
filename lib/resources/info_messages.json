@@ -29,5 +29,13 @@
     "MEG_CAMPAIGN_ELIGIBLE": "Campaign {campaignKey} is eligible for user ID:{userId}",
     "MEG_WINNER_CAMPAIGN": "MEG: Campaign {campaignKey} is the winner for group {groupId} for user ID:{userId} {algo}",
     "SETTINGS_UPDATED": "Settings fetched and updated successfully on the current VWO client instance when API: {apiName} got called having isViaWebhook param as {isViaWebhook}",
-    "NETWORK_CALL_SUCCESS": "Impression for {event} - {endPoint} was successfully received by VWO having Account ID:{accountId}, User ID:{userId} and UUID: {uuid}"
+    "NETWORK_CALL_SUCCESS": "Impression for {event} - {endPoint} was successfully received by VWO having Account ID:{accountId}, User ID:{userId} and UUID: {uuid}",
+
+    "EVENT_BATCH_DEFAULTS": "{parameter} in SDK configuration is missing or invalid (should be greater than {minLimit}). Using default value: {defaultValue}",
+    "EVENT_QUEUE": "Event with payload:{event} pushed to the {queueType} queue",
+    "EVENT_BATCH_After_FLUSHING": "Event queue having {length} events has been flushed {manually}",
+    "IMPRESSION_BATCH_SUCCESS": "Impression event - {endPoint} was successfully received by VWO having Account ID:{accountId}",
+    "IMPRESSION_BATCH_FAILED": "Batch events couldn\"t be received by VWO. Calling Flush Callback with error and data",
+    "EVENT_BATCH_MAX_LIMIT": "{parameter} passed in SDK configuration is greater than the maximum limit of {maxLimit}. Setting it to the maximum limit",
+    "GATEWAY_AND_BATCH_EVENTS_CONFIG_MISMATCH": "Batch Events config passed in SDK configuration will not work as the gatewayService is already configured. Please check the documentation for more details"
   }

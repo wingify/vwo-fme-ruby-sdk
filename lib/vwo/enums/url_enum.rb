@@ -1,4 +1,4 @@
-# Copyright 2025 Wingify Software Pvt. Ltd.
+# Copyright 2024-2025 Wingify Software Pvt. Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,4 +18,5 @@ module UrlEnum
     EVENTS = '/events/t'
     ATTRIBUTE_CHECK = '/check-attribute'
     GET_USER_DATA = '/get-user-details'
+    BATCH_EVENTS = '/server-side/batch-events-v2'
   end  

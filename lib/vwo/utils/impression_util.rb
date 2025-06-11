@@ -1,4 +1,4 @@
-# Copyright 2025 Wingify Software Pvt. Ltd.
+# Copyright 2024-2025 Wingify Software Pvt. Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@ require_relative '../models/settings/settings_model'
 require_relative './network_util'
 require_relative '../models/user/context_model'
 require_relative '../enums/event_enum'
-
+require_relative '../services/batch_event_queue'
 # Creates and sends an impression for a variation shown event.
 # This function constructs the necessary properties and payload for the event
 # and uses the NetworkUtil to send a POST API request.
@@ -45,5 +45,12 @@ def create_and_send_impression_for_variation_shown(settings, campaign_id, variat
     context.get_ip_address
   )
 
-  NetworkUtil.send_post_api_request(properties, payload)
+  # check if batching is enabled
+  if BatchEventsQueue.instance
+    # add the payload to the batch events queue
+    BatchEventsQueue.instance.enqueue(payload)
+  else
+    # Send the constructed payload via POST request
+    NetworkUtil.send_post_api_request(properties, payload)
+  end
 end

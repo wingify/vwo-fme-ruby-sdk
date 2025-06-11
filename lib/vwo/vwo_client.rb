@@ -1,4 +1,4 @@
-# Copyright 2025 Wingify Software Pvt. Ltd.
+# Copyright 2024-2025 Wingify Software Pvt. Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ require_relative 'services/logger_service'
 require_relative 'enums/log_level_enum'
 require_relative 'utils/network_util'
 require_relative 'models/schemas/settings_schema_validation'
+require_relative 'services/batch_event_queue'
 
 class VWOClient
   attr_accessor :settings, :original_settings
@@ -59,7 +60,7 @@ class VWOClient
         LoggerService.log(LogLevelEnum::ERROR, "API_INVALID_PARAM", {apiName: api_name, key: 'feature_key', type: feature_key.class.name , correctType: 'String'})
         raise TypeError, 'feature_key should be a non-empty string'
       end
-      unless SettingsSchema.new.is_settings_valid(@original_settings)
+      unless SettingsService.instance.is_settings_valid
         LoggerService.log(LogLevelEnum::ERROR, "API_SETTING_INVALID")
         raise TypeError, 'Invalid Settings'
       end
@@ -100,7 +101,7 @@ class VWOClient
         LoggerService.log(LogLevelEnum::ERROR, "API_INVALID_PARAM", {apiName: api_name, key: 'event_properties', type: event_properties.class.name, correctType: 'Hash'})
         raise TypeError, 'event_properties should be a hash'
       end
-      unless SettingsSchema.new.is_settings_valid(@original_settings)
+      unless SettingsService.instance.is_settings_valid
         LoggerService.log(LogLevelEnum::ERROR, "API_SETTING_INVALID")
         raise TypeError, 'Invalid Settings'
       end
@@ -139,7 +140,7 @@ class VWOClient
         LoggerService.log(LogLevelEnum::ERROR, "API_INVALID_PARAM", {apiName: api_name, key: 'context.id', type: context[:id].class.name, correctType: 'String'})
         raise TypeError, 'Invalid context, id should be a non-empty string'
       end
-      unless SettingsSchema.new.is_settings_valid(@original_settings)
+      unless SettingsService.instance.is_settings_valid
         LoggerService.log(LogLevelEnum::ERROR, "API_SETTING_INVALID")
         raise TypeError, 'Invalid Settings'
       end
@@ -187,6 +188,24 @@ class VWOClient
           err: e.message
         }
       )
+    end
+  end
+
+  # Flushes the batch events queue
+  # @return [void]
+  def flush_events
+    api_name = 'flush_events'
+    begin
+      LoggerService.log(LogLevelEnum::DEBUG, "API_CALLED", {apiName: api_name})
+      if BatchEventsQueue.instance.nil?
+        LoggerService.log(LogLevelEnum::ERROR, "Batching is not enabled. Pass batch_event_data in the SDK configuration while invoking init API.", nil)
+        raise StandardError, "Batch events queue is not initialized"
+      end
+      # flush the batch events queue
+      @response = BatchEventsQueue.instance.flush(true)
+      @response
+    rescue StandardError => e
+      LoggerService.log(LogLevelEnum::ERROR, "API_THROW_ERROR", {apiName: api_name, err: e.message})
     end
   end
 end

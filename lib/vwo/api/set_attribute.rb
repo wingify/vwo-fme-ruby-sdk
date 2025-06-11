@@ -1,4 +1,4 @@
-# Copyright 2025 Wingify Software Pvt. Ltd.
+# Copyright 2024-2025 Wingify Software Pvt. Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@ require_relative '../models/user/context_model'
 require_relative '../enums/event_enum'
 require_relative '../utils/network_util'
 require_relative '../models/settings/settings_model'
+require_relative '../services/batch_event_queue'
 
 class SetAttributeApi
   # Sets multiple attributes for a user in a single network call.
@@ -51,7 +52,13 @@ class SetAttributeApi
       context.ip_address
     )
 
-    # Send the constructed payload via POST request
-    NetworkUtil.send_post_api_request(properties, payload)
+    # check if batching is enabled
+    if BatchEventsQueue.instance
+      # add the payload to the batch events queue
+      BatchEventsQueue.instance.enqueue(payload)
+    else
+      # Send the constructed payload via POST request
+      NetworkUtil.send_post_api_request(properties, payload)
+    end
   end
 end

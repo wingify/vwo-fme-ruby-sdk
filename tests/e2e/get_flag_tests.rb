@@ -1,4 +1,4 @@
-# Copyright 2025 Wingify Software Pvt. Ltd.
+# Copyright 2024-2025 Wingify Software Pvt. Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ require_relative '../data/dummy_settings_reader'
 require_relative '../data/test_cases/test_cases'
 require_relative '../data/test_data_reader'
 require_relative '../../lib/vwo/packages/storage/storage'
+require_relative 'test_helper'
 
 class VWOClientTest < Minitest::Test
   def setup
@@ -56,6 +57,7 @@ class VWOClientTest < Minitest::Test
     tests.each do |test_data|
         storage = StorageTest.new
         threading = { enabled: false }
+        stub_settings_service_valid!(@options)
         settings = JSON.parse(@settings_map[test_data['settings']])
         VWOBuilder.any_instance.stubs(:get_settings).returns(settings)
         @options = { sdk_key: 'test_sdk_key', account_id: 12345, threading: threading}
@@ -95,10 +97,13 @@ class VWOClientTest < Minitest::Test
   def run_salt_test(tests)
     tests.each do |test_data|
       settings = JSON.parse(@settings_map[test_data['settings']])
+      stub_settings_service_valid!(@options)
       VWOBuilder.any_instance.stubs(:get_settings).returns(settings)
+      threading = { enabled: false }
       @options = {
         sdk_key: 'test_sdk_key',
-        account_id: 12345
+        account_id: 12345,
+        threading: threading
       }
       Storage.instance.attach_connector(@options[:storage])
       vwo_client = VWO.init(@options)

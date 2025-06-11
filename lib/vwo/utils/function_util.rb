@@ -1,4 +1,4 @@
-# Copyright 2025 Wingify Software Pvt. Ltd.
+# Copyright 2024-2025 Wingify Software Pvt. Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,6 +16,10 @@ require_relative '../enums/campaign_type_enum'
 require_relative '../models/campaign/campaign_model'
 require_relative '../models/campaign/feature_model'
 require_relative '../models/settings/settings_model'
+require_relative '../utils/data_type_util'
+require_relative '../services/logger_service'
+require_relative '../enums/log_level_enum'
+require_relative '../constants/constants'
 require_relative '../utils/data_type_util'
 
 # Clones an object deeply.

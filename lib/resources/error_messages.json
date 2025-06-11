@@ -26,5 +26,9 @@
     "NETWORK_CALL_FAILED": "Error occurred while sending {method} request. Error:{err}",
     "SETTINGS_FETCH_FAILED": "Failed to fetch settings and hence VWO client instance couldn't be updated when API: {apiName} got called having isViaWebhook param as {isViaWebhook}. Error: {err}",
     "NETWORK_CALL_RETRY_ATTEMPT": "Request failed for {endPoint}, Error: {err}. Retrying in {delay} seconds, attempt {attempt} of {maxRetries}",
-    "NETWORK_CALL_RETRY_FAILED": "Max retries reached. Request failed for {endPoint}, Error: {err}"
+    "NETWORK_CALL_RETRY_FAILED": "Max retries reached. Request failed for {endPoint}, Error: {err}",
+
+    "CONFIG_PARAMETER_INVALID": "{parameter} paased in {api} API is not correct. It should be of type:{type}}",
+    "BATCH_QUEUE_EMPTY": "No batch queue present for account:{accountId} when calling flushEvents API. Check batchEvents config in init API",
+    "INVALID_BATCH_EVENTS_CONFIG": "Invalid batch events config, should be a hash, events_per_request should be a number greater than 0 and request_time_interval should be a number greater than 0"
   }

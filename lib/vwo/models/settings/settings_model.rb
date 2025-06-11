@@ -1,4 +1,4 @@
-# Copyright 2025 Wingify Software Pvt. Ltd.
+# Copyright 2024-2025 Wingify Software Pvt. Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,16 +14,18 @@
 
 require_relative '../campaign/campaign_model'
 require_relative '../campaign/feature_model'
+require_relative '../../constants/constants'
 
 class SettingsModel
   attr_reader :sdk_key, :account_id, :version, :collection_prefix,
-              :features, :campaigns, :campaign_groups, :groups
+              :features, :campaigns, :campaign_groups, :groups, :poll_interval
 
   def initialize(settings)
     @sdk_key = settings["sdkKey"]
     @account_id = settings["accountId"]
     @version = settings["version"]
     @collection_prefix = settings["collectionPrefix"]
+    @poll_interval = settings["pollInterval"] || Constants::POLLING_INTERVAL
     @features = []
     @campaigns = []
     @campaign_groups = settings["campaignGroups"] || {}
@@ -63,6 +65,10 @@ class SettingsModel
 
   def get_collection_prefix
     @collection_prefix
+  end
+
+  def get_poll_interval
+    @poll_interval
   end
 
   def process_features(settings)

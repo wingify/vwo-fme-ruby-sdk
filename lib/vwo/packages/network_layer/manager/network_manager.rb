@@ -1,4 +1,4 @@
-# Copyright 2025 Wingify Software Pvt. Ltd.
+# Copyright 2024-2025 Wingify Software Pvt. Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -69,10 +69,12 @@ class NetworkManager
     begin
       network_options = create_request(request)
       raise 'No URL found' if network_options.get_url.nil?
-
-      @client.post(network_options)
+  
+      response = @client.post(network_options) # Return the response
+      response
     rescue => e
       LoggerService.log(LogLevelEnum::ERROR, "Error posting: #{e.message}", nil)
+      return ResponseModel.new.set_error(e.message) # Return error response
     end
-  end  
+  end
 end

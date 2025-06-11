@@ -1,4 +1,4 @@
-# Copyright 2025 Wingify Software Pvt. Ltd.
+# Copyright 2024-2025 Wingify Software Pvt. Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -40,6 +40,14 @@ class ResponseModel
   
     def set_error(error)
       @error = error
+    end
+
+    def get_error
+      @error
+    end
+
+    def get_status_code
+      @status_code
     end
   end
   

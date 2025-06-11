@@ -1,4 +1,4 @@
-# Copyright 2025 Wingify Software Pvt. Ltd.
+# Copyright 2024-2025 Wingify Software Pvt. Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ require_relative '../data/dummy_settings_reader'
 require_relative '../data/test_cases/test_cases'
 require_relative '../data/test_data_reader'
 require_relative '../../lib/vwo/packages/storage/storage'
+require_relative 'test_helper'
 
 class VWOClientTest < Minitest::Test
   def setup
@@ -36,6 +37,7 @@ class VWOClientTest < Minitest::Test
   end
 
   def test_should_track_event_successfully
+    stub_settings_service_valid!(@options)
     puts "VWO instance initialized: #{@vwo_instance.nil? ? 'No' : 'Yes'}"
     event_name = 'custom1'
     event_properties = { key: 'value' }

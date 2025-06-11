@@ -1,4 +1,4 @@
-# Copyright 2025 Wingify Software Pvt. Ltd.
+# Copyright 2024-2025 Wingify Software Pvt. Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -104,8 +104,6 @@ class NetworkUtil
             msgId: "#{uuid}-#{get_current_unix_timestamp_in_millis}",
             visId: uuid,
             sessionId: get_current_unix_timestamp,
-            visitor_ua: visitor_user_agent,
-            visitor_ip: ip_address,
             event: {
             props: {
                 vwo_sdkName: Constants::SDK_NAME,
@@ -130,6 +128,10 @@ class NetworkUtil
         properties[:d][:event][:props][:id] = campaign_id
         properties[:d][:event][:props][:variation] = variation_id
         properties[:d][:event][:props][:isFirst] = 1
+
+        # Only add visitor_ua and visitor_ip if they are non-null
+        properties[:d][:visitor_ua] = visitor_user_agent if visitor_user_agent && !visitor_user_agent.empty?
+        properties[:d][:visitor_ip] = ip_address if ip_address && !ip_address.empty?
         
         LoggerService.log(LogLevelEnum::DEBUG, "IMPRESSION_FOR_TRACK_USER", {
             accountId: settings.account_id,
@@ -196,9 +198,16 @@ class NetworkUtil
         SettingsService.instance.protocol,
         SettingsService.instance.port
         )
-        
-        begin
-            network_instance.post(request)
+
+        begin 
+            if network_instance.get_client.get_should_use_threading
+                network_instance.get_client.get_thread_pool.post {
+                    response = network_instance.post(request)
+                    response
+                }
+            else
+                response = network_instance.post(request)
+            end
         rescue ResponseModel => err
             LoggerService.log(LogLevelEnum::ERROR, "NETWORK_CALL_FAILED", {
                 method: HttpMethodEnum::POST,
@@ -224,7 +233,7 @@ class NetworkUtil
         
         begin
             network_instance.get(request)
-        rescue ResponseModel => err
+        rescue StandardError => err
             LoggerService.log(LogLevelEnum::ERROR, "NETWORK_CALL_FAILED", {
                 method: HttpMethodEnum::GET,
                 err: err.is_a?(Hash) ? err.to_json : err

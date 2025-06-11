@@ -67,12 +67,13 @@ To customize the SDK further, additional parameters can be passed to the `init` 
 | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | -------- | ------------------------------- |
 | `account_id`                 | VWO Account ID for authentication.                                                                                                                          | Yes          | String   | `'123456'`                      |
 | `sdk_key`                    | SDK key corresponding to the specific environment to initialize the VWO SDK Client. You can get this key from VWO Application.                              | Yes          | String   | `'32-alpha-numeric-sdk-key'`    |
-| `poll_interval`              | Time interval for fetching updates from VWO servers (in seconds).                                                                                           | No           | Integer  | `60000`                            |
+| `poll_interval`              | Time interval for fetching updates from VWO servers (in milliseconds).                                                                                           | No           | Integer  | `60000`                            |
 | `gateway_service`            | A hash representing configuration for integrating VWO Gateway Service.                                                                                      | No           | Hash     | see [Gateway](#gateway) section |
 | `storage`                    | Custom storage connector for persisting user decisions and campaign data.                                                                                   | No           | Object   | See [Storage](#storage) section |
 | `logger`                     | Toggle log levels for more insights or for debugging purposes. You can also customize your own transport in order to have better control over log messages. | No           | Hash     | See [Logger](#logger) section   |
 | `integrations`               | A hash representing configuration for integrating VWO with other services. | No           | Hash     | See [Integrations](#integrations) section |
 | `threading`                  | Toggle threading for better (enabled by default) performance.                                                                               | No           | Hash     | See [Threading](#threading) section |
+| `batch_event_data`           | Configuration for batch event processing to optimize network requests. | No           | Hash     | See [Batch Events](#batch-events) section |
 
 Refer to the [official VWO documentation](https://developers.vwo.com/v2/docs/fme-ruby-install) for additional parameter details.
 
@@ -164,7 +165,13 @@ See [Pushing Attributes](https://developers.vwo.com/v2/docs/fme-ruby-attributes#
 
 ### Polling
 
-The `poll_interval` is an optional parameter that allows the SDK to automatically fetch and update settings from the VWO server at specified intervals. Setting this parameter ensures your application always uses the latest configuration.
+The `poll_interval` is an optional parameter that allows the SDK to automatically fetch and update settings from the VWO server at specified intervals. Setting this parameter ensures your application always uses the latest configuration. The polling interval can be configured in three ways:
+
+1. Set via SDK options: If `poll_interval` is specified in the initialization options (must be >= 1000 milliseconds), that interval will be used
+2. VWO Application Settings: If configured in your VWO application settings, that interval will be used
+3. Default Fallback: If neither of the above is set, a 10 minute (600,000 milliseconds) polling interval is used
+
+Setting this parameter ensures your application always uses the latest configuration by periodically checking for and applying any updates.
 
 ```ruby
 # poll_interval is in milliseconds
@@ -293,7 +300,33 @@ The SDK leverages threading to efficiently manage concurrent operations. Threadi
 | Parameter | Description | Required | Type | Default |
 | --------- | ----------- | -------- | ---- | ------- |
 | `enabled` | Enable or disable threading. | No | Boolean | `true` |
-| `max_pool_size` | Maximum number of threads to use. | No | Integer | `5` |
+| `max_pool_size` | Maximum number of threads to use for background event processing. | No | Integer | `5` |
+| `max_queue_size` | Maximum number of events that can be queued for background processing. | No | Integer | `10000` |
+
+**About `max_pool_size`**
+
+The `max_pool_size` parameter sets the upper limit for the number of background threads the SDK can use to process events concurrently.
+
+- **Short summary:** It controls how many events can be processed in parallel by background threads.
+- **Detailed explanation:**
+  - When threading is enabled, the SDK uses a thread pool to process events (such as tracking calls) in the background.
+  - `max_pool_size` determines the maximum number of threads that can run at the same time.
+  - If all threads are busy, new events are placed in the queue (up to `max_queue_size`).
+  - Increasing `max_pool_size` can improve throughput for high-traffic applications, but may increase resource usage (CPU, memory).
+  - Setting it too high may overwhelm your system; setting it too low may cause event processing delays.
+  - Adjust this value based on your application's concurrency needs and available resources.
+
+**About `max_queue_size`**
+
+The `max_queue_size` parameter controls how many events can be waiting in the background processing queue managed by the SDK's thread pool.
+
+- **Short summary:** It sets the upper limit for how many events can be queued for background processing.
+- **Detailed explanation:**
+  - When you use threading (enabled by default), events such as tracking calls are placed in a queue to be processed by background threads.
+  - `max_queue_size` determines the maximum number of events that can wait in this queue.
+  - If the queue is full (all threads are busy and the queue has reached its limit), any new event will be processed immediately in the main thread (blocking it until done) until space becomes available in the queue.
+  - This mechanism helps balance throughput and resource usage, ensuring you don't lose events but also don't overload your system.
+  - You can adjust this value based on your application's expected event volume and performance needs.
 
 #### Disable Threading
 
@@ -337,6 +370,44 @@ vwo_client = VWO.init({
         max_pool_size: 10
     },
 })
+```
+
+### Batch Events
+
+The `batch_event_` configuration allows you to optimize network requests by batching multiple events together. This is particularly useful for high-traffic applications where you want to reduce the number of API calls.
+
+| **Parameter**         | **Description**                                                         | **Required** | **Type** | **Default** |
+| --------------------- | ----------------------------------------------------------------------- | ------------ | -------- | ----------- |
+| `request_time_interval` | Time interval (in seconds) after which events are flushed to the server | No           | Integer   | `600`       |
+| `events_per_request`    | Maximum number of events to batch together before sending to the server | No           | Integer   | `100`       |
+| `flush_callback`       | Callback function to be executed after events are flushed               | No           | Function | See example |
+
+Example usage:
+
+```ruby
+require 'vwo'
+
+# flushCallBack method
+def call(error, data)
+    # custom implementation here
+end
+
+# Initialize VWO client
+vwo_client = VWO.init({
+    sdk_key: '32-alpha-numeric-sdk-key',
+    account_id: '123456',
+    batch_event_data: {
+        events_per_request: 50, # Optional: 50 events per request (default is 100)
+        request_time_interval: 60 # Optional: send events every 60 seconds (default is 600 seconds)
+        flush_callback: method(:call) # Optional: callback to execute after flush 
+    },
+})
+```
+
+- You can also manually flush events using the `flush_events()` method:
+
+```ruby
+vwo_client.flush_events()
 ```
 
 ## Version History

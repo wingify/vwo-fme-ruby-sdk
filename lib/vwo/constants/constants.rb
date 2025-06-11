@@ -1,4 +1,4 @@
-# Copyright 2025 Wingify Software Pvt. Ltd.
+# Copyright 2024-2025 Wingify Software Pvt. Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 # Define the Constants module
 module Constants
   SDK_NAME = 'vwo-fme-ruby-sdk'.freeze
-  SDK_VERSION = '1.2.0'.freeze
+  SDK_VERSION = '1.3.0'.freeze
 
   MAX_TRAFFIC_PERCENT = 100
   MAX_TRAFFIC_VALUE = 10_000
@@ -27,6 +27,8 @@ module Constants
   MAX_EVENTS_PER_REQUEST = 5_000
   DEFAULT_REQUEST_TIME_INTERVAL = 600 # 10 minutes in seconds
   DEFAULT_EVENTS_PER_REQUEST = 100
+  MIN_REQUEST_TIME_INTERVAL = 2
+  MIN_EVENTS_PER_REQUEST = 1
 
   SEED_URL = 'https://vwo.com'.freeze  # Define SEED_URL
   HTTP_PROTOCOL = 'http'.freeze
@@ -35,6 +37,7 @@ module Constants
   SETTINGS = 'settings'.freeze
   SETTINGS_EXPIRY = 10_000_000
   SETTINGS_TIMEOUT = 50_000
+  POLLING_INTERVAL = 600_000 # 10 minutes in milliseconds
 
   HOST_NAME = 'dev.visualwebsiteoptimizer.com'.freeze
   SETTINGS_ENDPOINT = '/server-side/v2-settings'.freeze
@@ -51,4 +54,5 @@ module Constants
 
   SHOULD_USE_THREADING = true
   MAX_POOL_SIZE = 5
+  MAX_QUEUE_SIZE = 10000
 end
