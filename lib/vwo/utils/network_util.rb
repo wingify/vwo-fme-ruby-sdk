@@ -23,6 +23,7 @@ require_relative '../packages/network_layer/models/request_model'
 require_relative '../packages/network_layer/models/response_model'
 require_relative '../utils/url_util'
 require_relative '../utils/uuid_util'
+require_relative '../utils/usage_stats_util'
 
 class NetworkUtil
   class << self
@@ -132,6 +133,12 @@ class NetworkUtil
         # Only add visitor_ua and visitor_ip if they are non-null
         properties[:d][:visitor_ua] = visitor_user_agent if visitor_user_agent && !visitor_user_agent.empty?
         properties[:d][:visitor_ip] = ip_address if ip_address && !ip_address.empty?
+
+        # check if usage stats size is greater than 0
+        usage_stats = UsageStatsUtil.get_usage_stats
+        if usage_stats.size > 0
+            properties[:d][:event][:props][:vwoMeta] = usage_stats
+        end
         
         LoggerService.log(LogLevelEnum::DEBUG, "IMPRESSION_FOR_TRACK_USER", {
             accountId: settings.account_id,
@@ -203,10 +210,17 @@ class NetworkUtil
             if network_instance.get_client.get_should_use_threading
                 network_instance.get_client.get_thread_pool.post {
                     response = network_instance.post(request)
+                    if response.get_status_code == 200
+                        UsageStatsUtil.clear_usage_stats
+                    end
                     response
                 }
             else
                 response = network_instance.post(request)
+                if response.get_status_code == 200
+                    UsageStatsUtil.clear_usage_stats
+                end
+                response
             end
         rescue ResponseModel => err
             LoggerService.log(LogLevelEnum::ERROR, "NETWORK_CALL_FAILED", {

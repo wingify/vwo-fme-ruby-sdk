@@ -15,7 +15,7 @@
 class VWOOptionsModel
   attr_accessor :account_id, :sdk_key, :is_development_mode, :storage, :gateway_service,
                 :poll_interval, :logger, :segmentation, :integrations, :network,
-                :should_wait_for_tracking_calls, :settings, :vwo_builder
+                :should_wait_for_tracking_calls, :settings, :vwo_builder, :is_usage_stats_disabled, :_vwo_meta
 
   def initialize(options = {})
     @account_id = options[:account_id]
@@ -31,6 +31,8 @@ class VWOOptionsModel
     @should_wait_for_tracking_calls = options[:should_wait_for_tracking_calls]
     @settings = options[:settings]
     @vwo_builder = options[:vwo_builder]
+    @is_usage_stats_disabled = options[:is_usage_stats_disabled]
+    @_vwo_meta = options[:_vwo_meta]
   end
 
   # Creates a model instance from a hash (dictionary)
@@ -104,4 +106,13 @@ class VWOOptionsModel
   def get_vwo_builder
     @vwo_builder
   end
+
+  def get_is_usage_stats_disabled
+    @is_usage_stats_disabled
+  end
+
+  def get_vwo_meta
+    @_vwo_meta
+  end
+  
 end

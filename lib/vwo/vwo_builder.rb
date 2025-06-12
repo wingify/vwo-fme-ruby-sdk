@@ -25,6 +25,7 @@ require_relative './services/batch_event_queue'
 require_relative './utils/function_util'
 require_relative './utils/batch_event_dispatcher'
 require_relative './constants/constants'
+require_relative './utils/usage_stats_util'
 
 class VWOBuilder
   attr_reader :settings, :storage, :log_manager, :is_settings_fetch_in_progress, :vwo_instance, :is_valid_poll_interval_passed_from_init
@@ -243,5 +244,14 @@ class VWOBuilder
         env: @options[:sdk_key]
       }
     )
+  end
+
+  # Initialize the usage stats
+  # @return [VWOBuilder] The VWOBuilder instance
+  def init_usage_stats
+    return self if @options[:is_usage_stats_disabled]
+
+    UsageStatsUtil.set_usage_stats(@options)
+    self
   end
 end

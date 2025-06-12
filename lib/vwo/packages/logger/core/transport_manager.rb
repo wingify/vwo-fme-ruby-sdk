@@ -13,6 +13,7 @@
 # limitations under the License.
 
 require_relative '../log_message_builder'
+require_relative '../../../enums/log_level_to_number'
 
 class LogTransportManager
     def initialize(config)
@@ -25,8 +26,8 @@ class LogTransportManager
     end
   
     def should_log?(transport_level, config_level)
-      target_level = log_level_to_number(transport_level)
-      desired_level = log_level_to_number(config_level || @config[:level])
+      target_level = LogLevelToNumber.to_number(transport_level)
+      desired_level = LogLevelToNumber.to_number(config_level || @config[:level])
       target_level >= desired_level
     end
   
@@ -69,18 +70,6 @@ class LogTransportManager
           end
         end
       end
-    end
-  
-    private
-  
-    def log_level_to_number(level)
-      {
-        'TRACE' => 0,
-        'DEBUG' => 1,
-        'INFO' => 2,
-        'WARN' => 3,
-        'ERROR' => 4
-      }[level.upcase] || 0
     end
   end
   

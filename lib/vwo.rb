@@ -36,6 +36,7 @@ class VWO
                    .set_network_manager
                    .set_segmentation
                    .init_polling
+                   .init_usage_stats
                    .init_batch
 
     if options[:settings]
