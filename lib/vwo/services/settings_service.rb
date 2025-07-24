@@ -27,7 +27,7 @@ class SettingsService
 
   class << self
     attr_accessor :instance
-    
+
     def get_instance
       @instance ||= SettingsService.new
     end
@@ -80,6 +80,8 @@ class SettingsService
 
     options['api-version'] = Constants::API_VERSION
     options[:source] = 'prod'
+    options[:sn] = Constants::SDK_NAME
+    options[:sv] = Constants::SDK_VERSION
 
     # When using gateway service, always fetch from SETTINGS_ENDPOINT since the gateway maintains the latest settings
     if @is_gateway_service_provided
