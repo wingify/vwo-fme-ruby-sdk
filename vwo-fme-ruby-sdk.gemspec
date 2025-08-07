@@ -1,6 +1,6 @@
 Gem::Specification.new do |spec|
     spec.name          = 'vwo-fme-ruby-sdk'
-    spec.version       = '1.4.0'
+    spec.version       = '1.4.1'
     spec.authors       = ['VWO']
     spec.email         = ['dev@wingify.com']
 

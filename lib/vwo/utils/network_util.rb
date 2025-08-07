@@ -32,7 +32,7 @@ class NetworkUtil
     # @return [String] URL-encoded query string
     def convert_params_to_string(params)
       return '' if params.nil? || params.empty?
-      
+
       '?' + params.map do |key, value|
         "#{URI.encode_www_form_component(key.to_s)}=#{URI.encode_www_form_component(value.to_s)}"
       end.join('&')
@@ -139,13 +139,13 @@ class NetworkUtil
         if usage_stats.size > 0
             properties[:d][:event][:props][:vwoMeta] = usage_stats
         end
-        
+
         LoggerService.log(LogLevelEnum::DEBUG, "IMPRESSION_FOR_TRACK_USER", {
             accountId: SettingsService.instance.account_id,
             userId: user_id,
             campaignId: campaign_id
         })
-        
+
         properties
     end
 
@@ -158,17 +158,17 @@ class NetworkUtil
             properties[:d][:event][:props][:variation] = 1
             properties[:d][:event][:props][:id] = 1  # Temporary value for ID
         end
-        
+
         if event_properties.is_a?(Hash) && !event_properties.empty?
         event_properties.each { |key, value| properties[:d][:event][:props][key] = value }
         end
-        
+
         LoggerService.log(LogLevelEnum::DEBUG, "IMPRESSION_FOR_TRACK_GOAL", {
             eventName: event_name,
             accountId: SettingsService.instance.account_id,
             userId: user_id
         })
-        
+
         properties
     end
 
@@ -194,7 +194,7 @@ class NetworkUtil
     # @param sdk_init_time - Time taken to initialize the SDK in milliseconds.
     # @returns The constructed payload with required fields.
     def get_sdk_init_event_payload(event_name, settings_fetch_time, sdk_init_time)
-        user_id = SettingsService.instance.account_id + "_" + SettingsService.instance.sdk_key
+        user_id = SettingsService.instance.account_id.to_s + "_" + SettingsService.instance.sdk_key
         properties = _get_event_base_payload(user_id, event_name, nil, nil)
         properties[:d][:event][:props][:vwo_fs_environment] = SettingsService.instance.sdk_key
         properties[:d][:event][:props][:product] = Constants::PRODUCT_NAME
@@ -225,7 +225,7 @@ class NetworkUtil
         SettingsService.instance.port
         )
 
-        begin 
+        begin
             if network_instance.get_client.get_should_use_threading
                 network_instance.get_client.get_thread_pool.post {
                     response = network_instance.post(request)
@@ -270,7 +270,7 @@ class NetworkUtil
             SettingsService.instance.port
         )
 
-        begin 
+        begin
             if network_instance.get_client.get_should_use_threading
                 network_instance.get_client.get_thread_pool.post {
                     response = network_instance.post(request)
@@ -287,7 +287,7 @@ class NetworkUtil
     # Sends a GET API request to the specified endpoint with given properties
     def send_get_api_request(properties, endpoint)
         network_instance = NetworkManager.instance
-        
+
         request = RequestModel.new(
         UrlUtil.get_base_url,
         HttpMethodEnum::GET,
@@ -298,7 +298,7 @@ class NetworkUtil
         SettingsService.Instance.protocol,
         SettingsService.Instance.port
         )
-        
+
         begin
             network_instance.get(request)
         rescue StandardError => err
