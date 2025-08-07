@@ -32,7 +32,7 @@ class TrackApi
   def track(settings, event_name, context, event_properties, hooks_service)
     if does_event_belong_to_any_feature(event_name, settings)
       # Create an impression for the track event
-      create_impression_for_track(settings, event_name, context, event_properties)
+      create_impression_for_track(event_name, context, event_properties)
 
       # Set and execute integration callback for the track event
       hooks_service.set({ event_name: event_name, api: ApiEnum::TRACK })
@@ -50,14 +50,12 @@ class TrackApi
   private
 
   # Creates an impression for a track event and sends it via a POST API request.
-  # @param settings [SettingsModel] Configuration settings.
   # @param event_name [String] Name of the event to track.
   # @param context [ContextModel] User details.
   # @param event_properties [Hash] Properties associated with the event.
-  def create_impression_for_track(settings, event_name, context, event_properties)
+  def create_impression_for_track(event_name, context, event_properties)
     # Get base properties for the event
     properties = NetworkUtil.get_events_base_properties(
-      settings,
       event_name,
       URI.encode_www_form_component(context.user_agent),
       context.ip_address
@@ -65,7 +63,6 @@ class TrackApi
 
     # Prepare the payload for the track goal
     payload = NetworkUtil.get_track_goal_payload_data(
-      settings,
       context.id,
       event_name,
       event_properties,

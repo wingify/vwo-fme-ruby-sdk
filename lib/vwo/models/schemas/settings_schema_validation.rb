@@ -89,6 +89,7 @@ class SettingsSchema
       optional(:groups).maybe(:hash)
       optional(:campaignGroups).maybe(:hash)
       optional(:collectionPrefix).maybe(:string)
+      optional(:sdkMetaInfo).maybe(:hash)
     end
   end
 

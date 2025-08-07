@@ -15,5 +15,6 @@
 # Event types
 module EventEnum
     VWO_VARIATION_SHOWN = 'vwo_variationShown'
-    VWO_SYNC_VISITOR_PROP = 'vwo_syncVisitorProp'
+    VWO_SYNC_VISITOR_PROP = 'vwo_syncVisitorProp',
+    VWO_INIT_CALLED = 'vwo_fmeSdkInit'
   end

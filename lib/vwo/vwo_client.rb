@@ -146,7 +146,7 @@ class VWOClient
       end
       
       context_model = ContextModel.new.model_from_dictionary(context)
-      SetAttributeApi.new.set_attribute(@settings, attributes, context_model)
+      SetAttributeApi.new.set_attribute(attributes, context_model)
     rescue StandardError => e
       LoggerService.log(LogLevelEnum::ERROR, "API_THROW_ERROR", {apiName: api_name, err: e.message})
     end

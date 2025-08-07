@@ -17,7 +17,7 @@
 # Define the Constants module
 module Constants
   SDK_NAME = 'vwo-fme-ruby-sdk'.freeze
-  SDK_VERSION = '1.3.2'.freeze
+  SDK_VERSION = '1.4.0'.freeze
 
   MAX_TRAFFIC_PERCENT = 100
   MAX_TRAFFIC_VALUE = 10_000
@@ -55,4 +55,6 @@ module Constants
   SHOULD_USE_THREADING = true
   MAX_POOL_SIZE = 5
   MAX_QUEUE_SIZE = 10000
+
+  PRODUCT_NAME = 'fme'.freeze
 end

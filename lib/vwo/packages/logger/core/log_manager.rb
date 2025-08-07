@@ -17,6 +17,7 @@ require 'securerandom'
 require_relative '../logger'
 require_relative 'transport_manager'
 require_relative '../transports/console_transport'
+require_relative '../../../enums/log_level_enum'
 
 class LogManager < VWOLogger
     @instance = nil
@@ -62,8 +63,9 @@ class LogManager < VWOLogger
       @transport_manager.log('WARN', message)
     end
   
-    def error(message)
+    def error(message, extraData = {})
       @transport_manager.log('ERROR', message)
+      # sendLogToVWO(message, LogLevelEnum::ERROR, extraData)
     end
   
     private

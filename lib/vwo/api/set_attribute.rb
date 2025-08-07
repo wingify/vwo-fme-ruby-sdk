@@ -15,28 +15,24 @@
 require_relative '../models/user/context_model'
 require_relative '../enums/event_enum'
 require_relative '../utils/network_util'
-require_relative '../models/settings/settings_model'
 require_relative '../services/batch_event_queue'
 
 class SetAttributeApi
   # Sets multiple attributes for a user in a single network call.
-  # @param settings [SettingsModel] Configuration settings.
   # @param attributes [Hash] Key-value map of attributes.
   # @param context [ContextModel] Context containing user information.
-  def set_attribute(settings, attributes, context)
-    create_impression_for_attributes(settings, attributes, context)
+  def set_attribute(attributes, context)
+    create_impression_for_attributes(attributes, context)
   end
 
   private
 
   # Creates an impression for multiple user attributes and sends it to the server.
-  # @param settings [SettingsModel] Configuration settings.
   # @param attributes [Hash] Key-value map of attributes.
   # @param context [ContextModel] Context containing user information.
-  def create_impression_for_attributes(settings, attributes, context)
+  def create_impression_for_attributes(attributes, context)
     # Retrieve base properties for the event
     properties = NetworkUtil.get_events_base_properties(
-      settings,
       EventEnum::VWO_SYNC_VISITOR_PROP,
       URI.encode_www_form_component(context.user_agent),
       context.ip_address
@@ -44,7 +40,6 @@ class SetAttributeApi
 
     # Construct payload data for multiple attributes
     payload = NetworkUtil.get_attribute_payload_data(
-      settings,
       context.id,
       EventEnum::VWO_SYNC_VISITOR_PROP,
       attributes,

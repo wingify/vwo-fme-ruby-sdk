@@ -28,7 +28,6 @@ require_relative '../services/batch_event_queue'
 def create_and_send_impression_for_variation_shown(settings, campaign_id, variation_id, context)
   # Get base properties for the event
   properties = NetworkUtil.get_events_base_properties(
-    settings,
     EventEnum::VWO_VARIATION_SHOWN,
     URI.encode_www_form_component(context.get_user_agent), # Encode user agent for URL safety
     context.get_ip_address
@@ -36,7 +35,6 @@ def create_and_send_impression_for_variation_shown(settings, campaign_id, variat
 
   # Construct payload data for tracking the user
   payload = NetworkUtil.get_track_user_payload_data(
-    settings,
     context.get_id,
     EventEnum::VWO_VARIATION_SHOWN,
     campaign_id,

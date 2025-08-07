@@ -80,11 +80,11 @@ class NetworkUtil
     end
 
     # Builds generic properties for different tracking calls
-    def get_events_base_properties(setting, event_name, visitor_user_agent = '', ip_address = '')
-        sdk_key = setting.sdk_key || ''
+    def get_events_base_properties(event_name, visitor_user_agent = '', ip_address = '')
+        sdk_key = SettingsService.instance.sdk_key || ''
         {
         en: event_name,
-        a: setting.account_id,
+        a: SettingsService.instance.account_id,
         env: sdk_key,
         eTime: get_current_unix_timestamp_in_millis,
         random: get_random_number,
@@ -96,9 +96,9 @@ class NetworkUtil
     end
 
     # Builds base payload for tracking events
-    def _get_event_base_payload(settings, user_id, event_name, visitor_user_agent = '', ip_address = '')
-        uuid = UUIDUtil.get_uuid(user_id.to_s, settings.account_id)
-        sdk_key = settings.sdk_key
+    def _get_event_base_payload(user_id, event_name, visitor_user_agent = '', ip_address = '')
+        uuid = UUIDUtil.get_uuid(user_id.to_s, SettingsService.instance.account_id)
+        sdk_key = SettingsService.instance.sdk_key
 
         {
         d: {
@@ -124,8 +124,8 @@ class NetworkUtil
     end
 
     # Builds track-user payload data
-    def get_track_user_payload_data(settings, user_id, event_name, campaign_id, variation_id, visitor_user_agent = '', ip_address = '')
-        properties = _get_event_base_payload(settings, user_id, event_name, visitor_user_agent, ip_address)
+    def get_track_user_payload_data(user_id, event_name, campaign_id, variation_id, visitor_user_agent = '', ip_address = '')
+        properties = _get_event_base_payload(user_id, event_name, visitor_user_agent, ip_address)
         properties[:d][:event][:props][:id] = campaign_id
         properties[:d][:event][:props][:variation] = variation_id
         properties[:d][:event][:props][:isFirst] = 1
@@ -141,7 +141,7 @@ class NetworkUtil
         end
         
         LoggerService.log(LogLevelEnum::DEBUG, "IMPRESSION_FOR_TRACK_USER", {
-            accountId: settings.account_id,
+            accountId: SettingsService.instance.account_id,
             userId: user_id,
             campaignId: campaign_id
         })
@@ -150,8 +150,8 @@ class NetworkUtil
     end
 
     # Constructs payload for tracking goals with custom event properties
-    def get_track_goal_payload_data(settings, user_id, event_name, event_properties, visitor_user_agent = '', ip_address = '')
-        properties = _get_event_base_payload(settings, user_id, event_name, visitor_user_agent, ip_address)
+    def get_track_goal_payload_data(user_id, event_name, event_properties, visitor_user_agent = '', ip_address = '')
+        properties = _get_event_base_payload(user_id, event_name, visitor_user_agent, ip_address)
         properties[:d][:event][:props][:isCustomEvent] = true
 
         if SettingsService.instance.is_gateway_service_provided
@@ -165,15 +165,15 @@ class NetworkUtil
         
         LoggerService.log(LogLevelEnum::DEBUG, "IMPRESSION_FOR_TRACK_GOAL", {
             eventName: event_name,
-            accountId: settings.account_id,
+            accountId: SettingsService.instance.account_id,
             userId: user_id
         })
         
         properties
     end
 
-    def get_attribute_payload_data(settings, user_id, event_name, event_properties, visitor_user_agent = '', ip_address = '')
-        properties = _get_event_base_payload(settings, user_id, event_name, visitor_user_agent, ip_address)
+    def get_attribute_payload_data(user_id, event_name, event_properties, visitor_user_agent = '', ip_address = '')
+        properties = _get_event_base_payload(user_id, event_name, visitor_user_agent, ip_address)
         properties[:d][:event][:props][:isCustomEvent] = true
 
         if event_properties.is_a?(Hash) && !event_properties.empty?
@@ -182,9 +182,28 @@ class NetworkUtil
 
         LoggerService.log(LogLevelEnum::DEBUG, "IMPRESSION_FOR_SYNC_VISITOR_PROP", {
             eventName: event_name,
-            accountId: settings.account_id,
+            accountId: SettingsService.instance.account_id,
             userId: user_id
         })
+        properties
+    end
+
+    # Constructs the payload for init called event.
+    # @param event_name - The name of the event.
+    # @param settings_fetch_time - Time taken to fetch settings in milliseconds.
+    # @param sdk_init_time - Time taken to initialize the SDK in milliseconds.
+    # @returns The constructed payload with required fields.
+    def get_sdk_init_event_payload(event_name, settings_fetch_time, sdk_init_time)
+        user_id = SettingsService.instance.account_id + "_" + SettingsService.instance.sdk_key
+        properties = _get_event_base_payload(user_id, event_name, nil, nil)
+        properties[:d][:event][:props][:vwo_fs_environment] = SettingsService.instance.sdk_key
+        properties[:d][:event][:props][:product] = Constants::PRODUCT_NAME
+        data = {
+            "isSDKInitialized": true,
+            "settingsFetchTime": settings_fetch_time,
+            "sdkInitTime": sdk_init_time
+        }
+        properties[:d][:event][:props][:data] = data
         properties
     end
 
@@ -227,6 +246,41 @@ class NetworkUtil
                 method: HttpMethodEnum::POST,
                 err: err.is_a?(Hash) ? err.to_json : err
             })
+        end
+    end
+
+    # Sends an event to VWO (generic event sender).
+    # @param properties - Query parameters for the request.
+    # @param payload - The payload for the request.
+    # @param event_name - The name of the event to send.
+    def send_event(properties, payload)
+        network_instance = NetworkManager.instance
+        headers = {}
+        headers[HeadersEnum::USER_AGENT] = payload[:d][:visitor_ua] if payload[:d][:visitor_ua]
+        headers[HeadersEnum::IP] = payload[:d][:visitor_ip] if payload[:d][:visitor_ip]
+
+        request = RequestModel.new(
+            UrlUtil.get_base_url,
+            HttpMethodEnum::POST,
+            UrlEnum::EVENTS,
+            properties,
+            payload,
+            headers,
+            SettingsService.instance.protocol,
+            SettingsService.instance.port
+        )
+
+        begin 
+            if network_instance.get_client.get_should_use_threading
+                network_instance.get_client.get_thread_pool.post {
+                    response = network_instance.post(request)
+                    response
+                }
+            else
+                response = network_instance.post(request)
+                response
+            end
+        rescue ResponseModel => err
         end
     end
 
