@@ -42,5 +42,12 @@ class UrlUtil
 
       base_url
     end
+
+    # Retrieves the collection prefix.
+    #
+    # @return [String] The collection prefix.
+    def get_collection_prefix
+      @collection_prefix
+    end
   end
 end

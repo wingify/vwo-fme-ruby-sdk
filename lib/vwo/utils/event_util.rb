@@ -34,3 +34,16 @@ def send_sdk_init_event(settings_fetch_time, sdk_init_time)
     NetworkUtil.send_event(properties, payload)
   end
 end
+
+# Sends a usage stats event to VWO.
+# @param usage_stats_account_id - The account id for usage stats.
+def send_sdk_usage_stats_event(usage_stats_account_id)
+  # create query parameters
+  properties = NetworkUtil.get_events_base_properties(EventEnum::VWO_USAGE_STATS, nil, nil, true, usage_stats_account_id)
+
+  # create payload
+  payload = NetworkUtil.get_sdk_usage_stats_payload_data(EventEnum::VWO_USAGE_STATS, usage_stats_account_id)
+
+  # send event
+  NetworkUtil.send_event(properties, payload)
+end

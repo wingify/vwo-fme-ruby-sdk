@@ -17,12 +17,13 @@ require_relative '../campaign/feature_model'
 require_relative '../../constants/constants'
 
 class SettingsModel
-  attr_reader :sdk_key, :account_id, :version, :collection_prefix,
+  attr_reader :sdk_key, :account_id, :usage_stats_account_id, :version, :collection_prefix,
               :features, :campaigns, :campaign_groups, :groups, :poll_interval
 
   def initialize(settings)
     @sdk_key = settings["sdkKey"]
     @account_id = settings["accountId"]
+    @usage_stats_account_id = settings["usageStatsAccountId"]
     @version = settings["version"]
     @collection_prefix = settings["collectionPrefix"]
     @poll_interval = settings["pollInterval"] || Constants::POLLING_INTERVAL
@@ -57,6 +58,10 @@ class SettingsModel
 
   def get_account_id
     @account_id
+  end
+
+  def get_usage_stats_account_id
+    @usage_stats_account_id
   end
 
   def get_version

@@ -84,6 +84,7 @@ class SettingsSchema
       optional(:sdkKey).maybe(:string)
       required(:version).filled(:integer)
       required(:accountId).filled(:integer)
+      optional(:usageStatsAccountId).maybe(:integer)
       optional(:features).array(:hash)
       required(:campaigns).array(:hash)
       optional(:groups).maybe(:hash)

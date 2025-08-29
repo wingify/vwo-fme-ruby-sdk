@@ -69,6 +69,8 @@ class UsageStatsUtil
 
     data = {}
 
+    data[:a] = SettingsService.instance.account_id
+    data[:env] = SettingsService.instance.sdk_key
     data[:ig] = 1 if integrations
     data[:eb] = 1 if event_batching
     data[:gs] = 1 if gateway_service
@@ -84,7 +86,7 @@ class UsageStatsUtil
       data[:ll] = LogLevelToNumber.to_number(logger[:level]) || -1
     end
 
-    data[:pi] = 1 if poll_interval
+    data[:pi] = poll_interval if poll_interval
 
     if vwo_meta && vwo_meta.key?(:ea)
       data[:_ea] = 1

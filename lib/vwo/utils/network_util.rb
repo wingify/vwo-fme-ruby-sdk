@@ -80,47 +80,69 @@ class NetworkUtil
     end
 
     # Builds generic properties for different tracking calls
-    def get_events_base_properties(event_name, visitor_user_agent = '', ip_address = '')
-        sdk_key = SettingsService.instance.sdk_key || ''
-        {
-        en: event_name,
-        a: SettingsService.instance.account_id,
-        env: sdk_key,
-        eTime: get_current_unix_timestamp_in_millis,
-        random: get_random_number,
-        p: 'FS',
-        visitor_ua: visitor_user_agent || '',
-        visitor_ip: ip_address || '',
-        url: "#{UrlUtil.get_base_url}#{UrlEnum::EVENTS}"
+    def get_events_base_properties(event_name, visitor_user_agent = '', ip_address = '', is_usage_stats_event = false, usage_stat_account_id = '')
+        properties = {
+            en: event_name,
+            a: SettingsService.instance.account_id,
+            eTime: get_current_unix_timestamp_in_millis,
+            random: get_random_number,
+            p: 'FS',
+            visitor_ua: visitor_user_agent || '',
+            visitor_ip: ip_address || '',
+            url: "#{UrlUtil.get_base_url}#{UrlEnum::EVENTS}"
         }
+
+        if !is_usage_stats_event
+            # set env key for standard sdk events
+            properties[:env] = SettingsService.instance.sdk_key
+        else
+            # set env key for usage stats events
+            properties[:a] = usage_stat_account_id
+        end
+
+        properties
     end
 
     # Builds base payload for tracking events
-    def _get_event_base_payload(user_id, event_name, visitor_user_agent = '', ip_address = '')
-        uuid = UUIDUtil.get_uuid(user_id.to_s, SettingsService.instance.account_id)
+    def _get_event_base_payload(user_id, event_name, visitor_user_agent = '', ip_address = '', is_usage_stats_event = false, usage_stat_account_id = '')
+        account_id = SettingsService.instance.account_id
+
+        if is_usage_stats_event
+            account_id = usage_stat_account_id
+        end
+
+        uuid = UUIDUtil.get_uuid(user_id.to_s, account_id.to_s)
         sdk_key = SettingsService.instance.sdk_key
 
-        {
-        d: {
-            msgId: "#{uuid}-#{get_current_unix_timestamp_in_millis}",
-            visId: uuid,
-            sessionId: get_current_unix_timestamp,
-            event: {
-            props: {
-                vwo_sdkName: Constants::SDK_NAME,
-                vwo_sdkVersion: Constants::SDK_VERSION,
-                vwo_envKey: sdk_key
-            },
-            name: event_name,
-            time: get_current_unix_timestamp_in_millis
-            },
-            visitor: {
-            props: {
-                vwo_fs_environment: sdk_key
-            }
+        payload = {
+            d: {
+                msgId: "#{uuid}-#{get_current_unix_timestamp_in_millis}",
+                visId: uuid,
+                sessionId: get_current_unix_timestamp,
+                event: {
+                    props: {
+                        vwo_sdkName: Constants::SDK_NAME,
+                        vwo_sdkVersion: Constants::SDK_VERSION,
+                    },
+                    name: event_name,
+                    time: get_current_unix_timestamp_in_millis
+                }
             }
         }
-        }
+
+        if !is_usage_stats_event
+            # set env key for standard sdk events
+            payload[:d][:event][:props][:vwo_envKey] = sdk_key
+
+            # set visitor props for standard sdk events
+            payload[:d][:visitor] = {
+                props: {
+                    vwo_fs_environment: sdk_key
+                }
+            }
+        end
+
+        payload
     end
 
     # Builds track-user payload data
@@ -133,12 +155,6 @@ class NetworkUtil
         # Only add visitor_ua and visitor_ip if they are non-null
         properties[:d][:visitor_ua] = visitor_user_agent if visitor_user_agent && !visitor_user_agent.empty?
         properties[:d][:visitor_ip] = ip_address if ip_address && !ip_address.empty?
-
-        # check if usage stats size is greater than 0
-        usage_stats = UsageStatsUtil.get_usage_stats
-        if usage_stats.size > 0
-            properties[:d][:event][:props][:vwoMeta] = usage_stats
-        end
 
         LoggerService.log(LogLevelEnum::DEBUG, "IMPRESSION_FOR_TRACK_USER", {
             accountId: SettingsService.instance.account_id,
@@ -207,6 +223,18 @@ class NetworkUtil
         properties
     end
 
+    # Constructs the payload for usage stats called event.
+    # @param event_name - The name of the event.
+    # @param usage_stats_account_id - The account id for usage stats.
+    # @returns The constructed payload with required fields.
+    def get_sdk_usage_stats_payload_data(event_name, usage_stats_account_id)
+        user_id = SettingsService.instance.account_id.to_s + "_" + SettingsService.instance.sdk_key
+        properties = _get_event_base_payload(user_id, event_name, nil, nil, true, usage_stats_account_id)
+        properties[:d][:event][:props][:product] = Constants::PRODUCT_NAME
+        properties[:d][:event][:props][:vwoMeta] = UsageStatsUtil.get_usage_stats
+        properties
+    end
+
     # Sends a POST API request with given properties and payload
     def send_post_api_request(properties, payload)
         network_instance = NetworkManager.instance
@@ -229,16 +257,10 @@ class NetworkUtil
             if network_instance.get_client.get_should_use_threading
                 network_instance.get_client.get_thread_pool.post {
                     response = network_instance.post(request)
-                    if response.get_status_code == 200
-                        UsageStatsUtil.clear_usage_stats
-                    end
                     response
                 }
             else
                 response = network_instance.post(request)
-                if response.get_status_code == 200
-                    UsageStatsUtil.clear_usage_stats
-                end
                 response
             end
         rescue ResponseModel => err
@@ -259,15 +281,20 @@ class NetworkUtil
         headers[HeadersEnum::USER_AGENT] = payload[:d][:visitor_ua] if payload[:d][:visitor_ua]
         headers[HeadersEnum::IP] = payload[:d][:visitor_ip] if payload[:d][:visitor_ip]
 
+        url = Constants::HOST_NAME
+        if UrlUtil.get_collection_prefix && !UrlUtil.get_collection_prefix.empty?
+            url = "#{url}/#{UrlUtil.get_collection_prefix}"
+        end
+
         request = RequestModel.new(
-            UrlUtil.get_base_url,
+            url,
             HttpMethodEnum::POST,
             UrlEnum::EVENTS,
             properties,
             payload,
             headers,
-            SettingsService.instance.protocol,
-            SettingsService.instance.port
+            Constants::HTTPS_PROTOCOL,
+            nil
         )
 
         begin

@@ -93,6 +93,14 @@ class VWO
         # send the sdk init info to vwo server
         send_sdk_init_event(SettingsService.instance.settings_fetch_time, time_taken_for_init.to_s)
       end
+
+      # send the usage stats event to vwo server
+      # get usage stats account id from settings
+      usage_stats_account_id = @@instance.original_settings["usageStatsAccountId"]
+      if usage_stats_account_id
+        send_sdk_usage_stats_event(usage_stats_account_id)
+      end
+
       @@instance
     rescue StandardError => e
       puts "[ERROR]: VWO-SDK: Got error while initializing VWO: #{e.message}"
