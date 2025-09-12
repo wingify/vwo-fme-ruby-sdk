@@ -57,6 +57,12 @@ class SegmentEvaluator
       SegmentOperandEvaluator.new.evaluate_user_dsl(sub_dsl, properties)
     when SegmentOperatorValueEnum::UA
       SegmentOperandEvaluator.new.evaluate_user_agent_dsl(sub_dsl, @context)
+    when SegmentOperatorValueEnum::IP
+      SegmentOperandEvaluator.new.evaluate_string_operand_dsl(sub_dsl, @context, SegmentOperatorValueEnum::IP)
+    when SegmentOperatorValueEnum::BROWSER_VERSION
+      SegmentOperandEvaluator.new.evaluate_string_operand_dsl(sub_dsl, @context, SegmentOperatorValueEnum::BROWSER_VERSION)
+    when SegmentOperatorValueEnum::OS_VERSION
+      SegmentOperandEvaluator.new.evaluate_string_operand_dsl(sub_dsl, @context, SegmentOperatorValueEnum::OS_VERSION)
     else
       false
     end

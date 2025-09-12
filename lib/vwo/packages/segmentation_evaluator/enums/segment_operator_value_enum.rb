@@ -27,4 +27,7 @@ module SegmentOperatorValueEnum
     BROWSER_AGENT = 'browser_string'
     UA = 'ua'
     FEATURE_ID = 'featureId'
+    IP = 'ip_address'
+    BROWSER_VERSION = 'browser_version'
+    OS_VERSION = 'os_version'
   end

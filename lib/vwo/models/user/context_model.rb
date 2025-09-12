@@ -15,14 +15,15 @@
 require_relative './context_vwo_model'
 
 class ContextModel
-  attr_accessor :id, :user_agent, :ip_address, :custom_variables, :variation_targeting_variables, :vwo
+  attr_accessor :id, :user_agent, :ip_address, :custom_variables, :variation_targeting_variables, :post_segmentation_variables, :vwo
 
-  def initialize(id = nil, user_agent = nil, ip_address = nil, custom_variables = {}, variation_targeting_variables = {}, vwo = nil)
+  def initialize(id = nil, user_agent = nil, ip_address = nil, custom_variables = {}, variation_targeting_variables = {}, post_segmentation_variables = {}, vwo = nil)
     @id = id
     @user_agent = user_agent
     @ip_address = ip_address
     @custom_variables = custom_variables || {}
     @variation_targeting_variables = variation_targeting_variables || {}
+    @post_segmentation_variables = post_segmentation_variables || {}
     @vwo = vwo
   end
 
@@ -45,6 +46,7 @@ class ContextModel
     @ip_address = context[:ipAddress]
     @custom_variables = context[:customVariables] if context.key?(:customVariables)
     @variation_targeting_variables = context[:variationTargetingVariables] if context.key?(:variationTargetingVariables)
+    @post_segmentation_variables = context[:postSegmentationVariables] if context.key?(:postSegmentationVariables)
     @vwo = ContextVWOModel.new.model_from_dictionary(context[:_vwo]) if context.key?(:_vwo)
 
     self
@@ -88,6 +90,14 @@ class ContextModel
 
   def set_variation_targeting_variables(variation_targeting_variables)
     @variation_targeting_variables = variation_targeting_variables
+  end
+
+  def get_post_segmentation_variables
+    @post_segmentation_variables
+  end
+
+  def set_post_segmentation_variables(post_segmentation_variables)
+    @post_segmentation_variables = post_segmentation_variables
   end
 
   def get_vwo

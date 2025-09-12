@@ -35,12 +35,10 @@ def create_and_send_impression_for_variation_shown(settings, campaign_id, variat
 
   # Construct payload data for tracking the user
   payload = NetworkUtil.get_track_user_payload_data(
-    context.get_id,
     EventEnum::VWO_VARIATION_SHOWN,
     campaign_id,
     variation_id,
-    context.get_user_agent,
-    context.get_ip_address
+    context
   )
 
   # check if batching is enabled

@@ -24,6 +24,7 @@ require_relative '../packages/network_layer/models/response_model'
 require_relative '../utils/url_util'
 require_relative '../utils/uuid_util'
 require_relative '../utils/usage_stats_util'
+require_relative '../models/user/context_model'
 
 class NetworkUtil
   class << self
@@ -146,8 +147,15 @@ class NetworkUtil
     end
 
     # Builds track-user payload data
-    def get_track_user_payload_data(user_id, event_name, campaign_id, variation_id, visitor_user_agent = '', ip_address = '')
+    def get_track_user_payload_data(event_name, campaign_id, variation_id, context)
+        user_id = context.get_id
+        visitor_user_agent = context.get_user_agent
+        ip_address = context.get_ip_address
+        custom_variables = context.get_custom_variables
+        post_segmentation_variables = context.get_post_segmentation_variables
+
         properties = _get_event_base_payload(user_id, event_name, visitor_user_agent, ip_address)
+
         properties[:d][:event][:props][:id] = campaign_id
         properties[:d][:event][:props][:variation] = variation_id
         properties[:d][:event][:props][:isFirst] = 1
@@ -155,6 +163,22 @@ class NetworkUtil
         # Only add visitor_ua and visitor_ip if they are non-null
         properties[:d][:visitor_ua] = visitor_user_agent if visitor_user_agent && !visitor_user_agent.empty?
         properties[:d][:visitor_ip] = ip_address if ip_address && !ip_address.empty?
+
+        # Add post-segmentation variables if they exist in custom variables
+        if post_segmentation_variables&.any? && custom_variables&.any?
+            post_segmentation_variables.each do |key|
+                # Try to get value using string key first, then symbol key
+                value = custom_variables[key] || custom_variables[key.to_sym]
+                if value
+                    properties[:d][:visitor][:props][key] = value
+                end
+            end
+        end
+
+        # Add IP address as a standard attribute if available
+        if ip_address && !ip_address.empty?
+          properties[:d][:visitor][:props][:ip] = ip_address
+        end
 
         LoggerService.log(LogLevelEnum::DEBUG, "IMPRESSION_FOR_TRACK_USER", {
             accountId: SettingsService.instance.account_id,

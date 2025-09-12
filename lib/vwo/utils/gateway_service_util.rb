@@ -72,7 +72,7 @@ end
 def add_is_gateway_service_required_flag(settings)
   pattern = /
     (?!custom_variable\s*:\s*{\s*"name"\s*:\s*")   # Prevent matching inside custom_variable
-    \b(country|region|city|os|device|device_type|browser_string|ua)\b
+    \b(country|region|city|os|device|device_type|browser_string|ua|browser_version|os_version)\b
     |
     "custom_variable"\s*:\s*{\s*"name"\s*:\s*"inlist\([^)]*\)"
   /x
