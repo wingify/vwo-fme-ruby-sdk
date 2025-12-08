@@ -31,6 +31,13 @@ class SettingsService
     def get_instance
       @instance ||= SettingsService.new
     end
+
+    def normalize_settings(settings)
+      normalized_settings = settings.dup
+      normalized_settings['features'] = [] if normalized_settings['features'].is_a?(Hash) && normalized_settings['features'].empty?
+      normalized_settings['campaigns'] = [] if normalized_settings['campaigns'].is_a?(Hash) && normalized_settings['campaigns'].empty?
+      normalized_settings
+    end
   end
 
   def initialize(options)
@@ -102,7 +109,11 @@ class SettingsService
       settings_fetch_end_time = (Time.now.to_f * 1000).to_i
       time_taken = settings_fetch_end_time - settings_fetch_start_time
       @settings_fetch_time = time_taken.to_s 
-      response.get_data
+      settings = response.get_data
+      # Deep duplicate the settings to avoid modifying the original object
+      normalized_settings = SettingsService.normalize_settings(settings)
+
+      normalized_settings
     rescue => e
       LoggerService.log(LogLevelEnum::ERROR, "Error fetching settings: #{e.message}", nil)
       raise e

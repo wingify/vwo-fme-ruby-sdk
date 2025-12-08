@@ -12,5 +12,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require_relative './test_helper'
-Dir["#{File.dirname(File.absolute_path(__FILE__))}/**/*_tests.rb"].sort.each { |file| require file }
+require_relative './test_cases/e2e/test_helper'
+Dir["#{File.dirname(File.absolute_path(__FILE__))}/test_cases/**/*_tests.rb"].sort.each { |file| require file }
