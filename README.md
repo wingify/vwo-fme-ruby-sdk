@@ -425,7 +425,7 @@ bundle install
 ## Running Unit Tests
 
 ```bash
-ruby tests/e2e/run_all_tests.rb
+ruby tests/run_all_tests.rb
 ```
 
 ## Contributing

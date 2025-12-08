@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require_relative '../../lib/vwo/services/settings_service'
+require_relative '../../../lib/vwo/services/settings_service'
 require 'test/unit'
-$LOAD_PATH.unshift File.expand_path('lib', __dir__)
-$LOAD_PATH.unshift File.expand_path('tests/data', __dir__)
+$LOAD_PATH.unshift File.expand_path('../../../lib', __dir__)
+$LOAD_PATH.unshift File.expand_path('../../data', __dir__)
 
 # Stub SettingsService.new to always return your custom instance
 def stub_settings_service_valid!(options = {})
