@@ -17,7 +17,7 @@
 # Define the Constants module
 module Constants
   SDK_NAME = 'vwo-fme-ruby-sdk'.freeze
-  SDK_VERSION = '1.6.1'.freeze
+  SDK_VERSION = '1.7.0'.freeze
 
   MAX_TRAFFIC_PERCENT = 100
   MAX_TRAFFIC_VALUE = 10_000
@@ -57,4 +57,27 @@ module Constants
   MAX_QUEUE_SIZE = 10000
 
   PRODUCT_NAME = 'fme'.freeze
+
+  REQUEST_TIMEOUT = 10 # 10 seconds
+
+  # Retry mechanism constants
+  MAX_RETRIES = 3
+  INITIAL_RETRY_DELAY = 2 # seconds
+  RETRY_BACKOFF_FACTOR = 2
+
+  # Default retry configuration
+  DEFAULT_RETRY_CONFIG = {
+    should_retry: true,
+    initial_delay: 2,
+    max_retries: 3,
+    backoff_multiplier: 2
+  }.freeze
+
+  # debugger event constants
+  V2_SETTINGS = 'v2-settings'.freeze
+  POLLING = 'polling'.freeze
+  BATCH_EVENTS = 'batch-events'.freeze
+  NETWORK_CALL_FAILURE_AFTER_MAX_RETRIES = 'NETWORK_CALL_FAILURE_AFTER_MAX_RETRIES'.freeze
+  NETWORK_CALL_SUCCESS_WITH_RETRIES = 'NETWORK_CALL_SUCCESS_WITH_RETRIES'.freeze
+  IMPACT_ANALYSIS = 'IMPACT_ANALYSIS'.freeze
 end

@@ -3,3 +3,5 @@
 .DS_STORE
 *.gem
 *.lock
+*.yml
+.ruby-version

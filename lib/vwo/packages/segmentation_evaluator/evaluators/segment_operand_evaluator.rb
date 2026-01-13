@@ -22,6 +22,7 @@ require_relative '../../../enums/url_enum'
 require_relative '../../../services/logger_service'
 require_relative '../../../models/user/context_model'
 require_relative '../../../enums/log_level_enum'
+require_relative '../../../enums/api_enum'
 
 # SegmentOperandEvaluator class provides methods to evaluate different types of DSL (Domain Specific Language)
 # expressions based on the segment conditions defined for custom variables, user IDs, and user agents.
@@ -45,7 +46,7 @@ class SegmentOperandEvaluator
     if operand.include?('inlist')
       match = operand.match(/inlist\(([^)]+)\)/)
       unless match
-        LoggerService.log(LogLevelEnum::ERROR, "Invalid 'inList' operand format", nil)
+        LoggerService.log(LogLevelEnum::ERROR, "INVALID_ATTRIBUTE_LIST_FORMAT", { an: ApiEnum::GET_FLAG, sId: @context.get_session_id, uuid: @context.get_uuid})
         return false
       end
 
@@ -62,7 +63,7 @@ class SegmentOperandEvaluator
         end
         return res
       rescue StandardError => e
-        LoggerService.log(LogLevelEnum::ERROR, "Error while fetching data: #{e}", nil)
+        LoggerService.log(LogLevelEnum::ERROR, "ERROR_FETCHING_DATA_FROM_GATEWAY", { err: e.message, an: ApiEnum::GET_FLAG, sId: @context.get_session_id, uuid: @context.get_uuid})
         return false
       end
 

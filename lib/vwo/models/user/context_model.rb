@@ -13,11 +13,13 @@
 # limitations under the License.
 
 require_relative './context_vwo_model'
+require_relative '../../utils/uuid_util'
+require_relative '../../services/settings_service'
 
 class ContextModel
-  attr_accessor :id, :user_agent, :ip_address, :custom_variables, :variation_targeting_variables, :post_segmentation_variables, :vwo
+  attr_accessor :id, :user_agent, :ip_address, :custom_variables, :variation_targeting_variables, :post_segmentation_variables, :vwo, :session_id, :uuid
 
-  def initialize(id = nil, user_agent = nil, ip_address = nil, custom_variables = {}, variation_targeting_variables = {}, post_segmentation_variables = {}, vwo = nil)
+  def initialize(id = nil, user_agent = nil, ip_address = nil, custom_variables = {}, variation_targeting_variables = {}, post_segmentation_variables = {}, vwo = nil, session_id = nil, uuid = nil)
     @id = id
     @user_agent = user_agent
     @ip_address = ip_address
@@ -25,6 +27,8 @@ class ContextModel
     @variation_targeting_variables = variation_targeting_variables || {}
     @post_segmentation_variables = post_segmentation_variables || {}
     @vwo = vwo
+    @session_id = session_id
+    @uuid = uuid
   end
 
   # Creates a model instance from a hash (dictionary)
@@ -48,6 +52,20 @@ class ContextModel
     @variation_targeting_variables = context[:variationTargetingVariables] if context.key?(:variationTargetingVariables)
     @post_segmentation_variables = context[:postSegmentationVariables] if context.key?(:postSegmentationVariables)
     @vwo = ContextVWOModel.new.model_from_dictionary(context[:_vwo]) if context.key?(:_vwo)
+  
+    # check if sessionId is present in context and should be non null and non empty string
+    if context.key?(:sessionId) && context[:sessionId].is_a?(String) && !context[:sessionId].empty?
+      @session_id = context[:sessionId]
+    else
+      @session_id = Time.now.to_i
+    end
+
+    # check if uuid is present in context and should be non null and non empty string
+    if context.key?(:uuid) && context[:uuid].is_a?(String) && !context[:uuid].empty?
+      @uuid = context[:uuid]
+    else
+      @uuid = UUIDUtil.get_uuid(id.to_s, SettingsService.instance.account_id.to_s)
+    end
 
     self
   end
@@ -106,5 +124,21 @@ class ContextModel
 
   def set_vwo(vwo)
     @vwo = vwo
+  end
+
+  def get_session_id
+    @session_id
+  end
+
+  def set_session_id(session_id)
+    @session_id = session_id
+  end
+
+  def get_uuid
+    @uuid
+  end
+
+  def set_uuid(uuid)
+    @uuid = uuid
   end
 end

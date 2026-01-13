@@ -12,12 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-module ApiEnum
-  INIT = 'init'
-  GET_FLAG = 'getFlag'
-  TRACK_EVENT = 'trackEvent'
-  SET_ATTRIBUTE = 'setAttribute'
-  UPDATE_SETTINGS = 'updateSettings'
-  FLUSH_EVENTS = 'flushEvents'
+module DebugCategoryEnum
+    DECISION = 'decision'
+    NETWORK = 'network'
+    RETRY = 'retry'
+    ERROR = 'error'
 end
-  

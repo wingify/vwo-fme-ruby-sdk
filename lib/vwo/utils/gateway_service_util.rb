@@ -21,6 +21,7 @@ require_relative 'url_util'
 require_relative '../enums/campaign_type_enum'
 require_relative '../services/logger_service'
 require_relative '../enums/log_level_enum'
+require_relative '../enums/api_enum'
 
 # Retrieves data from a web service using the specified query parameters and endpoint.
 # @param query_params [Hash] The parameters to be used in the query string of the request.
@@ -30,7 +31,7 @@ def get_from_gateway_service(query_params, endpoint)
   network_instance = NetworkManager.instance
 
   unless SettingsService.instance.is_gateway_service_provided
-    LoggerService.log(LogLevelEnum::ERROR, "GATEWAY_URL_ERROR")
+    LoggerService.log(LogLevelEnum::ERROR, "INVALID_GATEWAY_URL", { an: ApiEnum::GET_FLAG})
     return false
   end
 
@@ -49,7 +50,7 @@ def get_from_gateway_service(query_params, endpoint)
     response = network_instance.get(request)
     return response.get_data
   rescue StandardError => e
-    LoggerService.log(LogLevelEnum::ERROR, "Error fetching from Gateway Service: #{e.message}", nil)
+    LoggerService.log(LogLevelEnum::ERROR, "ERROR_FETCHING_SETTINGS", { err: e.message, an: ApiEnum::GET_FLAG})
     return false
   end
 end

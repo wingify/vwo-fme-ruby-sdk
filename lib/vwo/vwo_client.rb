@@ -24,6 +24,7 @@ require_relative 'enums/log_level_enum'
 require_relative 'utils/network_util'
 require_relative 'models/schemas/settings_schema_validation'
 require_relative 'services/batch_event_queue'
+require_relative 'enums/api_enum'
 
 class VWOClient
   attr_accessor :settings, :original_settings
@@ -38,7 +39,7 @@ class VWOClient
       set_settings_and_add_campaigns_to_rules(settings, self)
       UrlUtil.init(collection_prefix: @settings.get_collection_prefix)
     rescue StandardError => e
-      LoggerService.log(LogLevelEnum::ERROR, "Error setting and adding campaigns to rules message: #{e.message}", nil)
+      LoggerService.log(LogLevelEnum::ERROR, "ERROR_ADDING_CAMPAIGNS_TO_RULES", { err: e.message, an: ApiEnum::INIT})
     end
     LoggerService.log(LogLevelEnum::INFO, "CLIENT_INITIALIZED")
     self
@@ -57,26 +58,22 @@ class VWOClient
       LoggerService.log(LogLevelEnum::DEBUG, "API_CALLED", {apiName: api_name})
 
       unless feature_key.is_a?(String) && !feature_key.empty?
-        LoggerService.log(LogLevelEnum::ERROR, "API_INVALID_PARAM", {apiName: api_name, key: 'feature_key', type: feature_key.class.name , correctType: 'String'})
         raise TypeError, 'feature_key should be a non-empty string'
       end
       unless SettingsService.instance.is_settings_valid
-        LoggerService.log(LogLevelEnum::ERROR, "API_SETTING_INVALID")
         raise TypeError, 'Invalid Settings'
       end
       unless context.is_a?(Hash)
-        LoggerService.log(LogLevelEnum::ERROR, "API_CONTEXT_INVALID")
         raise TypeError, 'Invalid context'
       end
       unless context[:id].is_a?(String) && !context[:id].empty?
-        LoggerService.log(LogLevelEnum::ERROR, "API_INVALID_PARAM", {apiName: api_name, key: 'context.id', type: context[:id].class.name, correctType: 'String'})
         raise TypeError, 'Invalid context, id should be a non-empty string'
       end
       
       context_model = ContextModel.new.model_from_dictionary(context)
       FlagApi.new.get(feature_key, @settings, context_model, hooks_service)
     rescue StandardError => e
-      LoggerService.log(LogLevelEnum::ERROR, "API_THROW_ERROR", {apiName: api_name, err: e.message})
+      LoggerService.log(LogLevelEnum::ERROR, "EXECUTION_FAILED", {apiName: api_name, err: e.message, an: ApiEnum::GET_FLAG})
       error_response
     end
   end
@@ -94,26 +91,22 @@ class VWOClient
       LoggerService.log(LogLevelEnum::DEBUG, "API_CALLED", {apiName: api_name})
       
       unless event_name.is_a?(String) && !event_name.empty?
-        LoggerService.log(LogLevelEnum::ERROR, "API_INVALID_PARAM", {apiName: api_name, key: 'event_name', type: event_name.class.name, correctType: 'String'})
         raise TypeError, 'event_name should be a non-empty string'
       end
       unless event_properties.is_a?(Hash)
-        LoggerService.log(LogLevelEnum::ERROR, "API_INVALID_PARAM", {apiName: api_name, key: 'event_properties', type: event_properties.class.name, correctType: 'Hash'})
         raise TypeError, 'event_properties should be a hash'
       end
       unless SettingsService.instance.is_settings_valid
-        LoggerService.log(LogLevelEnum::ERROR, "API_SETTING_INVALID")
         raise TypeError, 'Invalid Settings'
       end
       unless context[:id].is_a?(String) && !context[:id].empty?
-        LoggerService.log(LogLevelEnum::ERROR, "API_INVALID_PARAM", {apiName: api_name, key: 'context.id', type: context[:id].class.name, correctType: 'String'})
         raise TypeError, 'Invalid context, id should be a non-empty string'
       end
       
       context_model = ContextModel.new.model_from_dictionary(context)
       TrackApi.new.track(@settings, event_name, context_model, event_properties, hooks_service)
     rescue StandardError => e
-      LoggerService.log(LogLevelEnum::ERROR, "API_THROW_ERROR", {apiName: api_name, err: e.message})
+      LoggerService.log(LogLevelEnum::ERROR, "EXECUTION_FAILED", {apiName: api_name, err: e.message, an: ApiEnum::TRACK_EVENT})
       { event_name: false }
     end
   end
@@ -129,26 +122,22 @@ class VWOClient
       LoggerService.log(LogLevelEnum::DEBUG, "API_CALLED", {apiName: api_name})
 
       unless attributes.is_a?(Hash) && !attributes.empty?
-        LoggerService.log(LogLevelEnum::ERROR, "API_INVALID_PARAM", {apiName: api_name, key: 'attributes', type: attributes.class.name, correctType: 'Hash'})
         raise TypeError, 'Attributes should be a hash with key-value pairs and non-empty'
       end
       unless context.is_a?(Hash)
-        LoggerService.log(LogLevelEnum::ERROR, "API_INVALID_PARAM", {apiName: api_name, key: 'context', type: context.class.name, correctType: 'Hash'})
         raise TypeError, 'Invalid context'
       end
       unless context[:id].is_a?(String) && !context[:id].empty?
-        LoggerService.log(LogLevelEnum::ERROR, "API_INVALID_PARAM", {apiName: api_name, key: 'context.id', type: context[:id].class.name, correctType: 'String'})
         raise TypeError, 'Invalid context, id should be a non-empty string'
       end
       unless SettingsService.instance.is_settings_valid
-        LoggerService.log(LogLevelEnum::ERROR, "API_SETTING_INVALID")
         raise TypeError, 'Invalid Settings'
       end
       
       context_model = ContextModel.new.model_from_dictionary(context)
       SetAttributeApi.new.set_attribute(attributes, context_model)
     rescue StandardError => e
-      LoggerService.log(LogLevelEnum::ERROR, "API_THROW_ERROR", {apiName: api_name, err: e.message})
+      LoggerService.log(LogLevelEnum::ERROR, "EXECUTION_FAILED", {apiName: api_name, err: e.message, an: ApiEnum::SET_ATTRIBUTE})
     end
   end
 
@@ -171,8 +160,7 @@ class VWOClient
 
       # Validate settings schema
       unless SettingsSchema.new.is_settings_valid(settings_to_update)
-        LoggerService.log(LogLevelEnum::ERROR, "API_SETTING_INVALID")
-        raise TypeError, 'Invalid Settings'
+        raise TypeError, "Got Invalid Settings, settings: #{settings_to_update}"
       end
 
       # Set the settings on the client instance
@@ -181,12 +169,13 @@ class VWOClient
     rescue StandardError => e
       LoggerService.log(
         LogLevelEnum::ERROR,
-        "SETTINGS_FETCH_FAILED",
+        "UPDATING_CLIENT_INSTANCE_FAILED_WHEN_WEBHOOK_TRIGGERED",
         {
           apiName: api_name,
           isViaWebhook: is_via_webhook,
-          err: e.message
-        }
+          err: e.message,
+          an: ApiEnum::UPDATE_SETTINGS
+        }, false
       )
     end
   end
@@ -198,14 +187,13 @@ class VWOClient
     begin
       LoggerService.log(LogLevelEnum::DEBUG, "API_CALLED", {apiName: api_name})
       if BatchEventsQueue.instance.nil?
-        LoggerService.log(LogLevelEnum::ERROR, "Batching is not enabled. Pass batch_event_data in the SDK configuration while invoking init API.", nil)
         raise StandardError, "Batch events queue is not initialized"
       end
       # flush the batch events queue
       @response = BatchEventsQueue.instance.flush(true)
       @response
     rescue StandardError => e
-      LoggerService.log(LogLevelEnum::ERROR, "API_THROW_ERROR", {apiName: api_name, err: e.message})
+      LoggerService.log(LogLevelEnum::ERROR, "EXECUTION_FAILED", {apiName: api_name, err: e.message, an: ApiEnum::FLUSH_EVENTS})
     end
   end
 end

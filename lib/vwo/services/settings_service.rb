@@ -21,6 +21,8 @@ require_relative '../utils/network_util'
 require_relative '../services/logger_service'
 require_relative '../enums/log_level_enum'
 require_relative '../models/schemas/settings_schema_validation'
+require_relative '../enums/api_enum'
+require_relative '../utils/debugger_service_util'
 
 class SettingsService
   attr_accessor :sdk_key, :account_id, :expiry, :network_timeout, :hostname, :port, :protocol, :is_gateway_service_provided, :is_settings_valid, :settings_fetch_time
@@ -69,8 +71,8 @@ class SettingsService
       response = fetch_settings
       response
     rescue => e
-      LoggerService.log(LogLevelEnum::ERROR, "SETTINGS_FETCH_ERROR", { err: e.message })
-      nil
+      LoggerService.log(LogLevelEnum::ERROR, "ERROR_FETCHING_SETTINGS", { err: e.message, an: ApiEnum::INIT}, false)
+      {}
     end
   end
 
@@ -79,7 +81,7 @@ class SettingsService
   # @return [SettingsModel] The fetched settings
   def fetch_settings(is_via_webhook = false)
     if @sdk_key.nil? || @account_id.nil?
-      LoggerService.log(LogLevelEnum::ERROR, "sdkKey is required for fetching account settings. Aborting!", nil)
+      LoggerService.log(LogLevelEnum::ERROR, "INVALID_SDK_KEY_OR_ACCOUNT_ID", { an: ApiEnum::INIT})
     end
 
     network_instance = NetworkManager.instance
@@ -108,15 +110,25 @@ class SettingsService
       # calculate the time taken to fetch the settings
       settings_fetch_end_time = (Time.now.to_f * 1000).to_i
       time_taken = settings_fetch_end_time - settings_fetch_start_time
-      @settings_fetch_time = time_taken.to_s 
+      @settings_fetch_time = time_taken.to_s
+
+      if response.get_total_attempts > 0
+        api_enum = is_via_webhook ? ApiEnum::UPDATE_SETTINGS : ApiEnum::INIT
+        debug_event_props = NetworkUtil.create_network_and_retry_debug_event(response, nil, api_enum, path)
+        # send debug event
+        DebuggerServiceUtil.send_debugger_event(debug_event_props)
+      end
       settings = response.get_data
+      if settings.nil? || settings.empty?
+        settings = {}
+      end
       # Deep duplicate the settings to avoid modifying the original object
       normalized_settings = SettingsService.normalize_settings(settings)
 
       normalized_settings
     rescue => e
-      LoggerService.log(LogLevelEnum::ERROR, "Error fetching settings: #{e.message}", nil)
-      raise e
+      LoggerService.log(LogLevelEnum::ERROR, "ERROR_FETCHING_SETTINGS", { err: e.message, an: ApiEnum::INIT})
+      {}
     end
   end
 
@@ -134,7 +146,7 @@ class SettingsService
         LoggerService.log(LogLevelEnum::INFO, "SETTINGS_FETCH_SUCCESS")
         settings
       else
-        LoggerService.log(LogLevelEnum::ERROR, "SETTINGS_SCHEMA_INVALID")
+        LoggerService.log(LogLevelEnum::ERROR, "INVALID_SETTINGS_SCHEMA", { accountId: @account_id, sdkKey: @sdk_key, settings: settings, an: ApiEnum::INIT}, false)
         {}
       end
     end

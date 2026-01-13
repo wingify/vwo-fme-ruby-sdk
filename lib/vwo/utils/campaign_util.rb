@@ -246,4 +246,39 @@ module CampaignUtil
       })
     end
   end
+
+  # Retrieves the campaign key from the campaign ID
+  # @param settings [SettingsModel] The settings for the VWO instance
+  # @param campaign_id [Integer] The ID of the campaign
+  # @return [String] The campaign key
+  def self.get_campaign_key_from_campaign_id(settings, campaign_id)
+    settings.get_campaigns.each do |campaign|
+      return campaign.get_key if campaign.get_id == campaign_id
+    end
+    nil
+  end
+
+  # Retrieves the variation name from the campaign ID and variation ID
+  # @param settings [SettingsModel] The settings for the VWO instance
+  # @param campaign_id [Integer] The ID of the campaign
+  # @param variation_id [Integer] The ID of the variation
+  # @return [String] The variation name
+  def self.get_variation_name_from_campaign_id_and_variation_id(settings, campaign_id, variation_id)
+    campaign = settings.get_campaigns.find { |c| c.get_id == campaign_id }
+    return nil unless campaign
+
+    variation = campaign.get_variations.find { |v| v.get_id == variation_id }
+    variation ? variation.get_key : nil
+  end
+
+  # Retrieves the campaign type from the campaign ID
+  # @param settings [SettingsModel] The settings for the VWO instance
+  # @param campaign_id [Integer] The ID of the campaign
+  # @return [String] The campaign type
+  def self.get_campaign_type_from_campaign_id(settings, campaign_id)
+    campaign = settings.get_campaigns.find { |c| c.get_id == campaign_id }
+    return nil unless campaign
+
+    campaign.get_type
+  end
 end

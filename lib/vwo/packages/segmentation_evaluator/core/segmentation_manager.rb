@@ -23,6 +23,7 @@ require_relative '../../../models/user/context_vwo_model'
 require_relative '../../../services/settings_service'
 require_relative '../../../utils/data_type_util'
 require_relative '../../../enums/log_level_enum'
+require_relative '../../../enums/api_enum'
 class SegmentationManager
   @@instance = nil # Singleton instance
 
@@ -64,7 +65,7 @@ class SegmentationManager
           vwo_data = get_from_gateway_service(params, UrlEnum::GET_USER_DATA)
           context.set_vwo(ContextVWOModel.new.model_from_dictionary(vwo_data))
         rescue StandardError => e
-          LoggerService.log(LogLevelEnum::ERROR, "Error in setting contextual data for segmentation. Got error: #{e.message}", nil)
+          LoggerService.log(LogLevelEnum::ERROR, "ERROR_SETTING_SEGMENTATION_CONTEXT", { err: e.message, an: ApiEnum::GET_FLAG, sId: context.get_session_id, uuid: context.get_uuid})
         end
       end
     end

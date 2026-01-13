@@ -53,22 +53,18 @@ class StorageDecorator
     experiment_variation_id = data[:experiment_variation_id]
 
     if feature_key.nil?
-      LoggerService.log(LogLevelEnum::ERROR, "STORING_DATA_ERROR", { key: 'featureKey' })
       raise 'Feature key is missing'
     end
 
     if context.nil? || context.id.nil?
-      LoggerService.log(LogLevelEnum::ERROR, "STORING_DATA_ERROR", { key: 'Context or Context.id' })
       raise 'Context ID is missing'
     end
 
     if rollout_key && !experiment_key && !rollout_variation_id
-      LoggerService.log(LogLevelEnum::ERROR, "STORING_DATA_ERROR", { key: 'Variation:(rolloutKey, experimentKey or rolloutVariationId)' })
       raise 'Invalid rollout variation'
     end
 
     if experiment_key && !experiment_variation_id
-      LoggerService.log(LogLevelEnum::ERROR, "STORING_DATA_ERROR", { key: 'Variation:(experimentKey or rolloutVariationId)' })
       raise 'Invalid experiment variation'
     end
 
@@ -81,6 +77,6 @@ class StorageDecorator
       experiment_id: experiment_id,
       experiment_key: experiment_key,
       experiment_variation_id: experiment_variation_id
-    })
+    }, context)
   end
 end

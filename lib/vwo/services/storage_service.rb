@@ -18,6 +18,7 @@ require_relative '../packages/storage/storage'
 require_relative '../services/logger_service'
 require_relative '../enums/log_level_enum'
 require_relative '../utils/data_type_util'
+require_relative '../enums/api_enum'
 
 class StorageService
   attr_accessor :storage_data
@@ -40,7 +41,7 @@ class StorageService
       data = storage_instance.get(feature_key, context.get_id)
       return data.nil? ? StorageEnum::NO_DATA_FOUND : data
     rescue StandardError => e
-      LoggerService.log(LogLevelEnum::ERROR, "STORED_DATA_ERROR", { err: e.message })
+      LoggerService.log(LogLevelEnum::ERROR, "ERROR_READING_DATA_FROM_STORAGE", { err: e.message, an: ApiEnum::GET_FLAG, sId: context.get_session_id, uuid: context.get_uuid})
       return StorageEnum::NO_DATA_FOUND
     end
   end
@@ -48,7 +49,7 @@ class StorageService
   # Stores data in the storage.
   # @param data [Hash] The data to be stored.
   # @return [Boolean] True if data is successfully stored, otherwise false.
-  def set_data_in_storage(data)
+  def set_data_in_storage(data, context)
     storage_instance = Storage.instance.get_connector
 
     # Check if the storage instance is available
@@ -57,8 +58,8 @@ class StorageService
     begin
       storage_instance.set(data)
       return true
-    rescue StandardError
-      LoggerService.log(LogLevelEnum::ERROR, "STORED_DATA_ERROR", { err: e.message })
+    rescue StandardError => e
+      LoggerService.log(LogLevelEnum::ERROR, "ERROR_STORING_DATA_IN_STORAGE", { err: e.message, an: ApiEnum::GET_FLAG, sId: context.get_session_id, uuid: context.get_uuid})
       return false
     end
   end

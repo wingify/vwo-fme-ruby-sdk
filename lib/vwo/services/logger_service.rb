@@ -17,13 +17,15 @@ require_relative '../vwo_client'
 require_relative '../packages/logger/core/log_manager'
 require_relative '../enums/log_level_enum'
 require_relative '../utils/log_message_util'
+require_relative '../enums/debug_category_enum'
+require_relative '../utils/debugger_service_util'
 
 class LoggerService
   class << self
     attr_accessor :debug_messages, :info_messages, :error_messages, :warning_messages
   end
 
-  def self.log(level, key = nil, map = {})
+  def self.log(level, key = nil, map = {}, should_send_to_vwo = true)
     log_manager = LogManager.instance
 
     if key && map
@@ -41,6 +43,10 @@ class LoggerService
       log_manager.warn(message)
     else
       log_manager.error(message)
+      if should_send_to_vwo
+        # print log
+        self.send_log_to_vwo(key, message, map)
+      end
     end
   end
 
@@ -78,6 +84,20 @@ class LoggerService
       @warning_messages
     else
       @error_messages
+    end
+  end
+
+  def self.send_log_to_vwo(template, message, debug_props = {})
+    # send debugger event to VWO
+    begin
+      debug_props[:msg_t] = template
+      debug_props[:msg] = message
+      debug_props[:lt] = LogLevelEnum::ERROR
+      debug_props[:cg] = DebugCategoryEnum::ERROR
+
+      DebuggerServiceUtil.send_debugger_event(debug_props)
+    rescue StandardError => e
+      puts "[VWO-SDK] ERROR: Error sending log to VWO: #{e.message}"
     end
   end
 end

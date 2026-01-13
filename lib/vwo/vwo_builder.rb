@@ -23,9 +23,10 @@ require_relative './packages/segmentation_evaluator/core/segmentation_manager'
 require_relative './services/logger_service'
 require_relative './services/batch_event_queue'
 require_relative './utils/function_util'
-require_relative './utils/batch_event_dispatcher'
 require_relative './constants/constants'
 require_relative './utils/usage_stats_util'
+require_relative './enums/api_enum'
+require_relative './utils/batch_event_dispatcher_util'
 
 class VWOBuilder
   attr_reader :settings, :storage, :log_manager, :is_settings_fetch_in_progress, :vwo_instance, :is_valid_poll_interval_passed_from_init
@@ -61,7 +62,7 @@ class VWOBuilder
           
           if (!events_per_request.is_a?(Numeric) || events_per_request <= 0) &&
              (!request_time_interval.is_a?(Numeric) || request_time_interval <= 0)
-            LoggerService.log(LogLevelEnum::ERROR, "INVALID_BATCH_EVENTS_CONFIG")
+            LoggerService.log(LogLevelEnum::ERROR, "INVALID_BATCH_EVENTS_CONFIG", { an: ApiEnum::INIT})
           end
           
           BatchEventsQueue.configure(
@@ -74,11 +75,11 @@ class VWOBuilder
           )
           @batch_event_data = @options[:batch_event_data]
         else
-          LoggerService.log(LogLevelEnum::ERROR, "Invalid batch events config, should be a hash.", nil)
+          LoggerService.log(LogLevelEnum::ERROR, "INVALID_BATCH_EVENTS_CONFIG", { an: ApiEnum::INIT})
         end
       end
     rescue StandardError => e
-      LoggerService.log(LogLevelEnum::ERROR, "Failed to initialize batch event queue: #{e.message}", nil)
+      LoggerService.log(LogLevelEnum::ERROR, "FAILED_TO_INITIALIZE_SERVICE", { service: 'Batch Event Queue', err: e.message, an: ApiEnum::INIT})
     end
   end
 
@@ -87,12 +88,14 @@ class VWOBuilder
   def set_network_manager
     begin
       network_instance = NetworkManager.instance(@options[:threading] || {})
-      network_instance.attach_client(@options[:network][:client]) if @options[:network] && @options[:network][:client]
+      retry_config = @options[:retry_config]
+      client = (@options[:network] && @options[:network][:client]) ? @options[:network][:client] : nil
+      network_instance.attach_client(client, retry_config)
       LoggerService.log(LogLevelEnum::DEBUG, "SERVICE_INITIALIZED", {service: "Network Layer"})
       network_instance.get_config.set_development_mode(@options[:is_development_mode]) if @options[:is_development_mode]
       self
     rescue StandardError => e
-      LoggerService.log(LogLevelEnum::ERROR, "Failed to initialize network manager: #{e.message}", nil)
+      LoggerService.log(LogLevelEnum::ERROR, "FAILED_TO_INITIALIZE_SERVICE", { service: 'Network Manager', err: e.message, an: ApiEnum::INIT})
       self
     end
   end
@@ -127,7 +130,7 @@ class VWOBuilder
     begin
       fetch_settings(force)
     rescue StandardError => e
-      LoggerService.log(LogLevelEnum::ERROR, "Failed to fetch settings: #{e.message}", nil)
+      LoggerService.log(LogLevelEnum::ERROR, "ERROR_FETCHING_SETTINGS", { err: e.message, an: ApiEnum::INIT})
       {}
     end
   end
@@ -175,9 +178,10 @@ class VWOBuilder
       check_and_poll
     elsif poll_interval
       # only log error if poll_interval is present in options
-      LoggerService.log(LogLevelEnum::ERROR, "INIT_OPTIONS_INVALID", {
+      LoggerService.log(LogLevelEnum::ERROR, "INVALID_POLLING_CONFIGURATION", {
         key: 'poll_interval',
-        correctType: 'number >= 1000'
+        correctType: 'number >= 1000',
+        an: ApiEnum::INIT
       })
     end
     self
@@ -227,14 +231,14 @@ class VWOBuilder
             LoggerService.log(LogLevelEnum::INFO, "POLLING_NO_CHANGE_IN_SETTINGS")
           end
         rescue StandardError => e
-          LoggerService.log(LogLevelEnum::ERROR, "POLLING_FETCH_SETTINGS_FAILED")
+          LoggerService.log(LogLevelEnum::ERROR, "ERROR_UPDATING_SETTINGS", { err: e.message, an: ApiEnum::INIT})
         end
       end
     end
   end
 
   def dispatcher(events, callback)
-    BatchEventDispatcher.dispatch(
+    BatchEventDispatcherUtil.dispatch(
       {
         ev: events
       },

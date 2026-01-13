@@ -24,6 +24,8 @@ require_relative '../core/segmentation_manager'
 require_relative '../utils/segment_util'
 require_relative './segment_operand_evaluator'
 require_relative '../../../enums/log_level_enum'
+require_relative '../../../enums/api_enum'
+
 class SegmentEvaluator
   attr_accessor :context, :settings, :feature
 
@@ -100,7 +102,7 @@ class SegmentEvaluator
               return !result if feature_id_value == 'off'
               return result
             else
-              LoggerService.log(LogLevelEnum::ERROR, "Feature not found with featureIdKey: #{feature_id_key}", nil)
+              LoggerService.log(LogLevelEnum::INFO, "Feature not found with featureIdKey: #{feature_id_key}", nil)
               return nil
             end
           end
@@ -146,7 +148,7 @@ class SegmentEvaluator
   # @return [Boolean] True if the location pre-segmentation is valid, false otherwise
   def check_location_pre_segmentation(location_map)
     unless @context&.get_ip_address
-      LoggerService.log(LogLevelEnum::ERROR, 'To evaluate location pre Segment, please pass ipAddress in context object', nil)
+      LoggerService.log(LogLevelEnum::ERROR, 'INVALID_IP_ADDRESS_IN_CONTEXT_FOR_PRE_SEGMENTATION', { an: ApiEnum::GET_FLAG, sId: @context.get_session_id, uuid: @context.get_uuid})
       return false
     end
     
@@ -162,7 +164,7 @@ class SegmentEvaluator
   # @return [Boolean] True if the user agent parser is valid, false otherwise
   def check_user_agent_parser(ua_parser_map)
     unless @context&.get_user_agent
-      LoggerService.log(LogLevelEnum::ERROR, 'To evaluate user agent related segments, please pass userAgent in context object', nil)
+      LoggerService.log(LogLevelEnum::ERROR, 'INVALID_USER_AGENT_IN_CONTEXT_FOR_PRE_SEGMENTATION', { an: ApiEnum::GET_FLAG, sId: @context.get_session_id, uuid: @context.get_uuid})
       return false
     end
 

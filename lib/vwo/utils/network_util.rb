@@ -25,6 +25,9 @@ require_relative '../utils/url_util'
 require_relative '../utils/uuid_util'
 require_relative '../utils/usage_stats_util'
 require_relative '../models/user/context_model'
+require_relative '../utils/log_message_util'
+require_relative '../utils/function_util'
+require_relative '../enums/api_enum'
 
 class NetworkUtil
   class << self
@@ -260,7 +263,7 @@ class NetworkUtil
     end
 
     # Sends a POST API request with given properties and payload
-    def send_post_api_request(properties, payload)
+    def send_post_api_request(properties, payload, campaign_info = {})
         network_instance = NetworkManager.instance
         headers = {}
         headers[HeadersEnum::USER_AGENT] = payload[:d][:visitor_ua] if payload[:d][:visitor_ua]
@@ -276,21 +279,60 @@ class NetworkUtil
         SettingsService.instance.protocol,
         SettingsService.instance.port
         )
-
+        
+        api_name = nil
+        extra_data_for_message = nil
+        if properties.key?(:en) && properties[:en] == EventEnum::VWO_VARIATION_SHOWN
+          api_name = ApiEnum::GET_FLAG
+          if campaign_info && campaign_info.key?(:campaign_type) && (campaign_info[:campaign_type] == CampaignTypeEnum::ROLLOUT || campaign_info[:campaign_type] == CampaignTypeEnum::PERSONALIZE)
+            extra_data_for_message = "feature: #{campaign_info[:feature_key]}, rule: #{campaign_info[:variation_name]}"
+          elsif campaign_info
+            extra_data_for_message = "feature: #{campaign_info[:feature_key]}, rule: #{campaign_info[:campaign_key]} and variation: #{campaign_info[:variation_name]}"
+          end
+        elsif properties.key?(:en) && properties[:en] != EventEnum::VWO_VARIATION_SHOWN
+          if properties.key?(:en) && properties[:en] == EventEnum::VWO_SYNC_VISITOR_PROP
+            api_name = ApiEnum::SET_ATTRIBUTE
+            extra_data_for_message = api_name
+          elsif properties.key?(:en) && properties[:en] != EventEnum::VWO_VARIATION_SHOWN && properties[:en] != EventEnum::VWO_DEBUGGER_EVENT && properties[:en] != EventEnum::VWO_INIT_CALLED
+            api_name = ApiEnum::TRACK_EVENT
+            extra_data_for_message = "event: #{properties[:en]}"
+          end
+        end
         begin
             if network_instance.get_client.get_should_use_threading
                 network_instance.get_client.get_thread_pool.post {
                     response = network_instance.post(request)
+                    if response.get_total_attempts > 0
+                      debug_event_props = create_network_and_retry_debug_event(response, request.get_body, api_name, extra_data_for_message)
+                      debug_event_props[:uuid] = request.get_body[:d][:visId]
+                      DebuggerServiceUtil.send_debugger_event(debug_event_props)
+                    end
+                    if response.get_status_code == 200
+                      LoggerService.log(LogLevelEnum::INFO, "NETWORK_CALL_SUCCESS", {
+                        event: properties[:en],
+                        endPoint: UrlEnum::EVENTS,
+                        accountId: SettingsService.instance.account_id,
+                        uuid: request.get_body[:d][:visId]
+                      })
+                    end
                     response
                 }
             else
                 response = network_instance.post(request)
+                if response.get_status_code == 200
+                    LoggerService.log(LogLevelEnum::INFO, "NETWORK_CALL_SUCCESS", {
+                        event: properties[:en],
+                        endPoint: UrlEnum::EVENTS,
+                        accountId: SettingsService.instance.account_id,
+                        uuid: request.get_body[:d][:visId]
+                    })
+                end
                 response
             end
         rescue ResponseModel => err
             LoggerService.log(LogLevelEnum::ERROR, "NETWORK_CALL_FAILED", {
-                method: HttpMethodEnum::POST,
-                err: err.is_a?(Hash) ? err.to_json : err
+                method: extra_data_for_message,
+                err: get_formatted_error_message(err.get_error)
             })
         end
     end
@@ -325,39 +367,111 @@ class NetworkUtil
             if network_instance.get_client.get_should_use_threading
                 network_instance.get_client.get_thread_pool.post {
                     response = network_instance.post(request)
+                    if response.get_status_code == 200
+                        LoggerService.log(LogLevelEnum::INFO, "NETWORK_CALL_SUCCESS", {
+                            event: properties[:en],
+                            endPoint: UrlEnum::EVENTS,
+                            accountId: SettingsService.instance.account_id,
+                            uuid: request.get_body[:d][:visId]
+                        })
+                    end
                     response
                 }
             else
                 response = network_instance.post(request)
+                if response.get_status_code == 200
+                    LoggerService.log(LogLevelEnum::INFO, "NETWORK_CALL_SUCCESS", {
+                        event: properties[:en],
+                        endPoint: UrlEnum::EVENTS,
+                        accountId: SettingsService.instance.account_id,
+                        uuid: request.get_body[:d][:visId]
+                    })
+                end
                 response
             end
         rescue ResponseModel => err
+            if properties.key?(:en) && properties[:en] != EventEnum::VWO_DEBUGGER_EVENT
+              LoggerService.log(LogLevelEnum::ERROR, "NETWORK_CALL_FAILED", {
+                method: "event: #{properties[:en]}",
+                err: get_formatted_error_message(err.get_error)
+              })
+            end
         end
     end
 
-    # Sends a GET API request to the specified endpoint with given properties
-    def send_get_api_request(properties, endpoint)
-        network_instance = NetworkManager.instance
-
-        request = RequestModel.new(
-        UrlUtil.get_base_url,
-        HttpMethodEnum::GET,
-        endpoint,
-        properties,
-        nil,
-        nil,
-        SettingsService.Instance.protocol,
-        SettingsService.Instance.port
-        )
-
-        begin
-            network_instance.get(request)
-        rescue StandardError => err
-            LoggerService.log(LogLevelEnum::ERROR, "NETWORK_CALL_FAILED", {
-                method: HttpMethodEnum::GET,
-                err: err.is_a?(Hash) ? err.to_json : err
-            })
+    # get debugger event payload
+    def get_debugger_event_payload(event_props)
+        user_id = SettingsService.instance.account_id.to_s + "_" + SettingsService.instance.sdk_key
+        properties = _get_event_base_payload(user_id, EventEnum::VWO_DEBUGGER_EVENT, nil, nil)
+        
+        # check if event_props contains uuid key and should be non null and non empty string
+        if event_props.key?(:uuid) && event_props[:uuid].is_a?(String) && !event_props[:uuid].empty?
+            properties[:d][:msgId] = "#{event_props[:uuid]}-#{get_current_unix_timestamp_in_millis}"
+            properties[:d][:visId] = event_props[:uuid]
+        else
+            event_props[:uuid] = properties[:d][:visId]
         end
+
+        # check if event_props contains sessionId key 
+        if event_props.key?(:sId)
+            properties[:d][:sessionId] = event_props[:sId]
+        else
+            event_props[:sId] = properties[:d][:sessionId]
+        end
+
+        event_props[:a] = SettingsService.instance.account_id.to_s
+        event_props[:product] = Constants::PRODUCT_NAME
+        event_props[:sn] = Constants::SDK_NAME
+        event_props[:sv] = Constants::SDK_VERSION
+        event_props[:eventId] = UUIDUtil.get_random_uuid(SettingsService.instance.sdk_key)
+
+        properties[:d][:event][:props] = {}
+        properties[:d][:event][:props][:vwoMeta] = event_props
+        properties
+    end
+
+    def create_network_and_retry_debug_event(response, payload, api_name, extra_data)
+      begin
+        category = DebugCategoryEnum::RETRY
+        msg_t = Constants::NETWORK_CALL_SUCCESS_WITH_RETRIES
+        msg = build_message(LoggerService.get_messages(LogLevelEnum::INFO)[msg_t], {
+          extraData: extra_data,
+          attempts: response.get_total_attempts,
+          err: get_formatted_error_message(response.get_error)
+        })
+        lt = LogLevelEnum::INFO.to_s
+        if response.get_status_code != 200
+          category = DebugCategoryEnum::NETWORK
+          msg_t = Constants::NETWORK_CALL_FAILURE_AFTER_MAX_RETRIES
+          msg = build_message(LoggerService.get_messages(LogLevelEnum::ERROR)[msg_t], {
+            extraData: extra_data,
+            attempts: response.get_total_attempts,
+            err: get_formatted_error_message(response.get_error)
+          })
+          lt = LogLevelEnum::ERROR.to_s
+        end
+        debug_event_props = {
+          cg: category,
+          msg_t: msg_t,
+          msg: msg,
+          lt: lt
+        }
+        if api_name
+          debug_event_props[:an] = api_name
+        end
+
+        if payload && payload[:d] && payload[:d][:sessionId]
+          debug_event_props[:sId] = payload[:d][:sessionId]
+        else
+          debug_event_props[:sId] = get_current_unix_timestamp
+        end
+        debug_event_props
+      rescue StandardError => err
+        LoggerService.log(LogLevelEnum::ERROR, "NETWORK_CALL_FAILED", {
+          method: extra_data,
+          err: get_formatted_error_message(err)
+        })
+      end
     end
   end
 end

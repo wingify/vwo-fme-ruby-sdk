@@ -13,9 +13,9 @@
 # limitations under the License.
 
 class RequestModel
-    attr_accessor :url, :method, :path, :query, :timeout, :body, :headers, :scheme, :port
+    attr_accessor :url, :method, :path, :query, :timeout, :body, :headers, :scheme, :port, :last_error, :retry_config, :event_name, :uuid, :campaign_id, :event_properties
   
-    def initialize(url, method = 'GET', path = '', query = {}, body = {}, headers = {}, scheme = 'https', port = nil)
+    def initialize(url, method = 'GET', path = '', query = {}, body = {}, headers = {}, scheme = 'https', port = nil, retry_config = nil)
       @url = scheme + '://' + url
       @method = method
       @path = path
@@ -25,6 +25,12 @@ class RequestModel
       @headers = headers
       @scheme = scheme
       @port = port
+      @last_error = nil
+      @retry_config = retry_config
+      @event_name = nil
+      @uuid = nil
+      @campaign_id = nil
+      @event_properties = nil
       if !@port.nil?
         @url = @url + ':' + @port.to_s
       end
@@ -33,7 +39,7 @@ class RequestModel
     end
   
     def parse_options
-      hostname, collection_prefix = @url.split('/')
+      _hostname, collection_prefix = @url.split('/')
       
       # Process body if present
       if !@body.nil?
@@ -141,5 +147,33 @@ class RequestModel
     def get_url
       @url
     end 
-  end
+
+    def set_last_error(last_error)
+      @last_error = last_error
+    end
+
+    def get_last_error
+      @last_error
+    end
+
+    def get_retry_config
+      @retry_config
+    end
+
+    def set_retry_config(retry_config)
+      @retry_config = retry_config
+    end
+
+    def get_extra_info
+      extra_info = {}
+      white_listed_keys = [:event_name, :uuid, :campaign_id, :event_properties]
+      
+      white_listed_keys.each do |key|
+        value = instance_variable_get("@#{key}")
+        extra_info[key] = value if !value.nil?
+      end
+      
+      extra_info
+    end
+end
   

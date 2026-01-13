@@ -15,7 +15,8 @@
 class VWOOptionsModel
   attr_accessor :account_id, :sdk_key, :is_development_mode, :storage, :gateway_service,
                 :poll_interval, :logger, :segmentation, :integrations, :network,
-                :should_wait_for_tracking_calls, :settings, :vwo_builder, :is_usage_stats_disabled, :_vwo_meta
+                :should_wait_for_tracking_calls, :settings, :vwo_builder, :is_usage_stats_disabled, :_vwo_meta,
+                :retry_config
 
   def initialize(options = {})
     @account_id = options[:account_id]
@@ -33,6 +34,7 @@ class VWOOptionsModel
     @vwo_builder = options[:vwo_builder]
     @is_usage_stats_disabled = options[:is_usage_stats_disabled]
     @_vwo_meta = options[:_vwo_meta]
+    @retry_config = options[:retry_config]
   end
 
   # Creates a model instance from a hash (dictionary)
@@ -51,6 +53,7 @@ class VWOOptionsModel
     @integrations = options[:integrations] if options.key?(:integrations)
     @network = options[:network] if options.key?(:network)
     @settings = options[:settings] if options.key?(:settings)
+    @retry_config = options[:retry_config] if options.key?(:retry_config)
 
     self
   end
@@ -113,6 +116,10 @@ class VWOOptionsModel
 
   def get_vwo_meta
     @_vwo_meta
+  end
+
+  def get_retry_config
+    @retry_config
   end
   
 end

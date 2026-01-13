@@ -13,13 +13,14 @@
 # limitations under the License.
 
 class ResponseModel
-    attr_accessor :status_code, :error, :headers, :data
+    attr_accessor :status_code, :error, :headers, :data, :total_attempts
   
     def initialize
       @status_code = nil
       @error = nil
       @headers = {}
       @data = nil
+      @total_attempts = 0
     end
   
     def set_status_code(code)
@@ -48,6 +49,14 @@ class ResponseModel
 
     def get_status_code
       @status_code
+    end
+
+    def set_total_attempts(total_attempts)
+      @total_attempts = total_attempts
+    end
+
+    def get_total_attempts
+      @total_attempts
     end
   end
   

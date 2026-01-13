@@ -35,14 +35,14 @@ class TrackApi
       create_impression_for_track(event_name, context, event_properties)
 
       # Set and execute integration callback for the track event
-      hooks_service.set({ event_name: event_name, api: ApiEnum::TRACK })
+      hooks_service.set({ event_name: event_name, api: ApiEnum::TRACK_EVENT })
       hooks_service.execute(hooks_service.get)
 
       return { event_name: true }
     end
 
     # Log an error if the event does not exist
-    LoggerService.log(LogLevelEnum::ERROR, "EVENT_NOT_FOUND", { eventName: event_name })
+    LoggerService.log(LogLevelEnum::ERROR, "EVENT_NOT_FOUND", { eventName: event_name, an: ApiEnum::TRACK_EVENT, sId: context.get_session_id, uuid: context.get_uuid})
 
     { event_name: false }
   end

@@ -90,7 +90,7 @@ class FlagApi
       end
   
       if feature.nil?
-        LoggerService.log(LogLevelEnum::ERROR, "FEATURE_NOT_FOUND", {featureKey: feature_key})
+        LoggerService.log(LogLevelEnum::ERROR, "FEATURE_NOT_FOUND", {featureKey: feature_key, an: ApiEnum::GET_FLAG, sId: context.get_session_id, uuid: context.get_uuid})
         return GetFlagResponse.new(false, [])
       end
   
@@ -130,7 +130,7 @@ class FlagApi
             rollout_variation_to_return = variation
             update_integrations_decision_object(passed_rollout_campaign, variation, passed_rules_information, decision)
   
-            create_and_send_impression_for_variation_shown(settings, passed_rollout_campaign.get_id, variation.get_id, context)
+            create_and_send_impression_for_variation_shown(settings, passed_rollout_campaign.get_id, variation.get_id, context, feature_key)
           end
         end
       elsif rollout_rules.empty?
@@ -175,17 +175,21 @@ class FlagApi
             experiment_variation_to_return = variation
             update_integrations_decision_object(campaign, variation, passed_rules_information, decision)
   
-            create_and_send_impression_for_variation_shown(settings, campaign.get_id, variation.get_id, context)
+            create_and_send_impression_for_variation_shown(settings, campaign.get_id, variation.get_id, context, feature_key)
           end
         end
       end
   
       # Store evaluated feature in storage
       if is_enabled
-        StorageDecorator.new.set_data_in_storage(
-          { feature_key: feature_key, context: context }.merge(passed_rules_information),
-          storage_service
-        )
+        begin
+          StorageDecorator.new.set_data_in_storage(
+            { feature_key: feature_key, context: context }.merge(passed_rules_information),
+            storage_service
+          )
+        rescue StandardError => e
+          LoggerService.log(LogLevelEnum::ERROR, "ERROR_STORING_DATA_IN_STORAGE", { err: e.message, an: ApiEnum::GET_FLAG, sId: context.get_session_id, uuid: context.get_uuid})
+        end
       end
   
       # Execute hooks
@@ -209,7 +213,8 @@ class FlagApi
           settings,
           feature&.get_impact_campaign&.get_campaign_id,
           variation_id,
-          context
+          context,
+          feature_key
         )
       end
   

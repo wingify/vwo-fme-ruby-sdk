@@ -30,6 +30,7 @@ require_relative './decision_util'
 require_relative './function_util'
 require_relative '../services/logger_service'
 require_relative '../enums/log_level_enum'
+require_relative '../enums/api_enum'
 
 # Evaluates groups for a given feature and group ID.
 # @param settings [SettingsModel] The settings for the VWO instance
@@ -249,16 +250,20 @@ def normalize_weights_and_find_winning_campaign(shortlisted_campaigns, context, 
       }
     )
 
-    StorageDecorator.new.set_data_in_storage(
-      {
-        feature_key: "#{Constants::VWO_META_MEG_KEY}#{group_id}",
-        context: context,
-        experiment_id: winner_campaign.id,
-        experiment_key: winner_campaign.key,
-        experiment_variation_id: winner_campaign.type == CampaignTypeEnum::PERSONALIZE ? winner_campaign.variations[0].id : -1
-      },
-      storage_service
-    )
+    begin
+      StorageDecorator.new.set_data_in_storage(
+        {
+          feature_key: "#{Constants::VWO_META_MEG_KEY}#{group_id}",
+          context: context,
+          experiment_id: winner_campaign.id,
+          experiment_key: winner_campaign.key,
+          experiment_variation_id: winner_campaign.type == CampaignTypeEnum::PERSONALIZE ? winner_campaign.variations[0].id : -1
+        },
+        storage_service
+      )
+    rescue StandardError => e
+      LoggerService.log(LogLevelEnum::ERROR, "ERROR_STORING_DATA_IN_STORAGE", { err: e.message, an: ApiEnum::GET_FLAG, sId: context.get_session_id, uuid: context.get_uuid})
+    end
 
     return winner_campaign if called_campaign_ids.include?(winner_campaign.id)
   else
@@ -329,18 +334,20 @@ def get_campaign_using_advanced_algo(settings, shortlisted_campaigns, context, c
         algo: 'using advanced algorithm'
       }
     )
-
-    StorageDecorator.new.set_data_in_storage(
-      {
-        feature_key: "#{Constants::VWO_META_MEG_KEY}#{group_id}",
-        context: context,
-        experiment_id: winner_campaign.id,
-        experiment_key: winner_campaign.key,
-        experiment_variation_id: winner_campaign.type == CampaignTypeEnum::PERSONALIZE ? winner_campaign.variations[0].id : -1
-      },
-      storage_service
-    )
-    
+    begin
+      StorageDecorator.new.set_data_in_storage(
+        {
+          feature_key: "#{Constants::VWO_META_MEG_KEY}#{group_id}",
+          context: context,
+          experiment_id: winner_campaign.id,
+          experiment_key: winner_campaign.key,
+          experiment_variation_id: winner_campaign.type == CampaignTypeEnum::PERSONALIZE ? winner_campaign.variations[0].id : -1
+        },
+        storage_service
+      )
+    rescue StandardError => e
+      LoggerService.log(LogLevelEnum::ERROR, "ERROR_STORING_DATA_IN_STORAGE", { err: e.message, an: ApiEnum::GET_FLAG, sId: context.get_session_id, uuid: context.get_uuid})
+    end
     return winner_campaign if called_campaign_ids.include?(winner_campaign.id)
   else
     LoggerService.log(LogLevelEnum::INFO, "No winner campaign found for MEG group: #{group_id}, using advanced algorithm", nil)

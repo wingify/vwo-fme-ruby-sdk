@@ -125,3 +125,17 @@ def add_linked_campaigns_to_settings(settings)
     feature.set_rules_linked_campaign(rules_linked_campaign)
   end
 end
+
+# Formats error messages for logging
+# @param error [Object] The error object (can be Error, String, Hash, etc.)
+# @return [String] The formatted error message
+def get_formatted_error_message(error)
+  if error.is_a?(StandardError)
+    error.message
+  elsif error.is_a?(String)
+    error
+  elsif error.is_a?(Hash) || error.is_a?(Array)
+    error.to_json
+  end
+  error
+end

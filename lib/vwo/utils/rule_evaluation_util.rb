@@ -49,7 +49,7 @@ def evaluate_rule(settings, feature, campaign, context, evaluated_feature_map, m
     )
 
     # Send an impression for the variation shown
-    create_and_send_impression_for_variation_shown(settings, campaign.get_id, whitelisted_object[:variation_id], context)
+    create_and_send_impression_for_variation_shown(settings, campaign.get_id, whitelisted_object[:variation_id], context, feature.get_key)
   end
 
   # Return the results of the evaluation
