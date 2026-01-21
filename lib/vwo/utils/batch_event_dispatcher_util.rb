@@ -44,9 +44,9 @@ class BatchEventDispatcherUtil
       headers['Authorization'] = "#{SettingsService.instance.sdk_key}"
 
       request = RequestModel.new(
-        UrlUtil.get_base_url,
+        SettingsService.instance.hostname,
         HttpMethodEnum::POST,
-        UrlEnum::BATCH_EVENTS,
+        SettingsService.instance.get_updated_endpoint_with_collection_prefix(UrlEnum::BATCH_EVENTS),
         properties,
         payload,
         headers,

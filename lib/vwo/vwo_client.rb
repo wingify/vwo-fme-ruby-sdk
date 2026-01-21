@@ -17,7 +17,6 @@ require_relative 'models/user/context_model'
 require_relative 'api/get_flag'
 require_relative 'api/set_attribute'
 require_relative 'api/track_event'
-require_relative 'utils/url_util'
 require_relative 'utils/settings_util'
 require_relative 'services/logger_service'
 require_relative 'enums/log_level_enum'
@@ -37,7 +36,6 @@ class VWOClient
     
     begin
       set_settings_and_add_campaigns_to_rules(settings, self)
-      UrlUtil.init(collection_prefix: @settings.get_collection_prefix)
     rescue StandardError => e
       LoggerService.log(LogLevelEnum::ERROR, "ERROR_ADDING_CAMPAIGNS_TO_RULES", { err: e.message, an: ApiEnum::INIT})
     end

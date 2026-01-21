@@ -21,7 +21,6 @@ require_relative '../constants/constants'
 require_relative '../packages/network_layer/manager/network_manager'
 require_relative '../packages/network_layer/models/request_model'
 require_relative '../packages/network_layer/models/response_model'
-require_relative '../utils/url_util'
 require_relative '../utils/uuid_util'
 require_relative '../utils/usage_stats_util'
 require_relative '../models/user/context_model'
@@ -92,8 +91,7 @@ class NetworkUtil
             random: get_random_number,
             p: 'FS',
             visitor_ua: visitor_user_agent || '',
-            visitor_ip: ip_address || '',
-            url: "#{UrlUtil.get_base_url}#{UrlEnum::EVENTS}"
+            visitor_ip: ip_address || ''
         }
 
         if !is_usage_stats_event
@@ -270,9 +268,9 @@ class NetworkUtil
         headers[HeadersEnum::IP] = payload[:d][:visitor_ip] if payload[:d][:visitor_ip]
 
         request = RequestModel.new(
-        UrlUtil.get_base_url,
+        SettingsService.instance.hostname,
         HttpMethodEnum::POST,
-        UrlEnum::EVENTS,
+        SettingsService.instance.get_updated_endpoint_with_collection_prefix(UrlEnum::EVENTS),
         properties,
         payload,
         headers,
@@ -347,20 +345,15 @@ class NetworkUtil
         headers[HeadersEnum::USER_AGENT] = payload[:d][:visitor_ua] if payload[:d][:visitor_ua]
         headers[HeadersEnum::IP] = payload[:d][:visitor_ip] if payload[:d][:visitor_ip]
 
-        url = Constants::HOST_NAME
-        if UrlUtil.get_collection_prefix && !UrlUtil.get_collection_prefix.empty?
-            url = "#{url}/#{UrlUtil.get_collection_prefix}"
-        end
-
         request = RequestModel.new(
-            url,
+            SettingsService.instance.hostname,
             HttpMethodEnum::POST,
-            UrlEnum::EVENTS,
+            SettingsService.instance.get_updated_endpoint_with_collection_prefix(UrlEnum::EVENTS),
             properties,
             payload,
             headers,
-            Constants::HTTPS_PROTOCOL,
-            nil
+            SettingsService.instance.protocol,
+            SettingsService.instance.port,
         )
 
         begin

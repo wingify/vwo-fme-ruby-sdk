@@ -16,7 +16,7 @@ class VWOOptionsModel
   attr_accessor :account_id, :sdk_key, :is_development_mode, :storage, :gateway_service,
                 :poll_interval, :logger, :segmentation, :integrations, :network,
                 :should_wait_for_tracking_calls, :settings, :vwo_builder, :is_usage_stats_disabled, :_vwo_meta,
-                :retry_config
+                :retry_config, :proxy_url
 
   def initialize(options = {})
     @account_id = options[:account_id]
@@ -35,6 +35,7 @@ class VWOOptionsModel
     @is_usage_stats_disabled = options[:is_usage_stats_disabled]
     @_vwo_meta = options[:_vwo_meta]
     @retry_config = options[:retry_config]
+    @proxy_url = options[:proxy_url]
   end
 
   # Creates a model instance from a hash (dictionary)
@@ -54,7 +55,7 @@ class VWOOptionsModel
     @network = options[:network] if options.key?(:network)
     @settings = options[:settings] if options.key?(:settings)
     @retry_config = options[:retry_config] if options.key?(:retry_config)
-
+    @proxy_url = options[:proxy_url] if options.key?(:proxy_url)
     self
   end
 
@@ -121,5 +122,8 @@ class VWOOptionsModel
   def get_retry_config
     @retry_config
   end
-  
+
+  def get_proxy_url
+    @proxy_url
+  end
 end

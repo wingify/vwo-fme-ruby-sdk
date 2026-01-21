@@ -44,6 +44,12 @@ def send_sdk_usage_stats_event(usage_stats_account_id)
   # create payload
   payload = NetworkUtil.get_sdk_usage_stats_payload_data(EventEnum::VWO_USAGE_STATS, usage_stats_account_id)
 
-  # send event
-  NetworkUtil.send_event(properties, payload)
+  # check if batching is enabled
+  if BatchEventsQueue.instance
+    # add the payload to the batch events queue
+    BatchEventsQueue.instance.enqueue(payload)
+  else
+    # send event
+    NetworkUtil.send_event(properties, payload)
+  end
 end

@@ -17,7 +17,6 @@ require_relative '../packages/network_layer/manager/network_manager'
 require_relative '../packages/network_layer/models/request_model'
 require_relative '../enums/http_method_enum'
 require_relative '../services/settings_service'
-require_relative 'url_util'
 require_relative '../enums/campaign_type_enum'
 require_relative '../services/logger_service'
 require_relative '../enums/log_level_enum'
@@ -37,9 +36,9 @@ def get_from_gateway_service(query_params, endpoint)
 
   begin
     request = RequestModel.new(
-      UrlUtil.get_base_url,
+      SettingsService.instance.hostname,
       HttpMethodEnum::GET,
-      endpoint,
+      SettingsService.instance.get_updated_endpoint_with_collection_prefix(endpoint),
       query_params,
       nil,
       nil,

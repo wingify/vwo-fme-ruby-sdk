@@ -25,7 +25,7 @@ require_relative '../enums/api_enum'
 require_relative '../utils/debugger_service_util'
 
 class SettingsService
-  attr_accessor :sdk_key, :account_id, :expiry, :network_timeout, :hostname, :port, :protocol, :is_gateway_service_provided, :is_settings_valid, :settings_fetch_time
+  attr_accessor :sdk_key, :account_id, :expiry, :network_timeout, :hostname, :port, :protocol, :is_gateway_service_provided, :is_settings_valid, :settings_fetch_time, :proxy_url, :is_proxy_url_provided, :collection_prefix
 
   class << self
     attr_accessor :instance
@@ -55,6 +55,15 @@ class SettingsService
       @protocol = parsed_url.scheme
       @port = parsed_url.port || options.dig(:gateway_service, :port)
       @is_gateway_service_provided = true
+      if options[:proxy_url] && !options[:proxy_url].nil? && !options[:proxy_url].empty?
+        LoggerService.log(LogLevelEnum::INFO, "PROXY_AND_GATEWAY_SERVICE_PROVIDED")
+      end
+    elsif options[:proxy_url] && !options[:proxy_url].nil? && !options[:proxy_url].empty?
+      parsed_url = URI.parse(options[:proxy_url])
+      @hostname = parsed_url.hostname
+      @protocol = parsed_url.scheme
+      @port = parsed_url.port
+      @is_proxy_url_provided = true
     else
       @hostname = Constants::HOST_NAME
       @protocol = Constants::HTTPS_PROTOCOL
@@ -62,6 +71,13 @@ class SettingsService
 
     LoggerService.log(LogLevelEnum::DEBUG, "SERVICE_INITIALIZED", { service: 'Settings Manager' })
     SettingsService.instance = self
+  end
+
+  def get_updated_endpoint_with_collection_prefix(endpoint)
+    if @collection_prefix && !@collection_prefix.empty?
+      return "/#{@collection_prefix}#{endpoint}"
+    end
+    return endpoint
   end
 
   # Fetch settings and cache them in storage.
@@ -124,7 +140,7 @@ class SettingsService
       end
       # Deep duplicate the settings to avoid modifying the original object
       normalized_settings = SettingsService.normalize_settings(settings)
-
+      @collection_prefix = normalized_settings['collectionPrefix'] if normalized_settings['collectionPrefix'] && !normalized_settings['collectionPrefix'].empty?
       normalized_settings
     rescue => e
       LoggerService.log(LogLevelEnum::ERROR, "ERROR_FETCHING_SETTINGS", { err: e.message, an: ApiEnum::INIT})

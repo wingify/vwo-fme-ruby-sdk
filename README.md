@@ -74,6 +74,7 @@ To customize the SDK further, additional parameters can be passed to the `init` 
 | `integrations`               | A hash representing configuration for integrating VWO with other services. | No           | Hash     | See [Integrations](#integrations) section |
 | `threading`                  | Toggle threading for better (enabled by default) performance.                                                                               | No           | Hash     | See [Threading](#threading) section |
 | `batch_event_data`           | Configuration for batch event processing to optimize network requests. | No           | Hash     | See [Batch Events](#batch-events) section |
+| `proxy_url`               | Custom proxy URL for redirecting all SDK network requests through a proxy server. | No           | String     | See [Proxy URL](#proxy-url) section |
 
 Refer to the [official VWO documentation](https://developers.vwo.com/v2/docs/fme-ruby-install) for additional parameter details.
 
@@ -409,6 +410,23 @@ vwo_client = VWO.init({
 ```ruby
 vwo_client.flush_events()
 ```
+
+### Proxy URL
+
+The `proxy_url` parameter allows you to redirect all SDK network calls through a custom proxy server. This feature enables you to route all SDK network requests (settings, tracking, etc.) through your own proxy server, providing better control over network traffic and security.
+
+#### How to Use Proxy URL
+
+The proxy URL can be configured by passing the `proxy_url` parameter in the `init` configuration.
+
+```ruby
+vwo_client = VWO.init({
+    sdk_key: '32-alpha-numeric-sdk-key',
+    account_id: '123456',
+    proxy_url: 'https://custom.proxy.com'
+})
+```
+**Note:** If both `gateway_service` and `proxy_url` are provided, the SDK will give preference to the `gateway_service` for all network requests.
 
 ## Version History
 

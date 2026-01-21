@@ -38,5 +38,6 @@
     "IMPRESSION_BATCH_FAILED": "Batch events couldn\"t be received by VWO. Calling Flush Callback with error and data",
     "EVENT_BATCH_MAX_LIMIT": "{parameter} passed in SDK configuration is greater than the maximum limit of {maxLimit}. Setting it to the maximum limit",
     "GATEWAY_AND_BATCH_EVENTS_CONFIG_MISMATCH": "Batch Events config passed in SDK configuration will not work as the gatewayService is already configured. Please check the documentation for more details",
-    "NETWORK_CALL_SUCCESS_WITH_RETRIES": "Network call for {extraData} succeeded after {attempts} retry attempt(s). Previous attempts failed with error: {err}"
+    "NETWORK_CALL_SUCCESS_WITH_RETRIES": "Network call for {extraData} succeeded after {attempts} retry attempt(s). Previous attempts failed with error: {err}",
+    "PROXY_AND_GATEWAY_SERVICE_PROVIDED": "Both proxy URL and gateway service are provided. Gateway service will be used and proxy URL will be ignored"
   }
