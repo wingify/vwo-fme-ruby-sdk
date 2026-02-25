@@ -63,11 +63,9 @@ class TrackApi
 
     # Prepare the payload for the track goal
     payload = NetworkUtil.get_track_goal_payload_data(
-      context.id,
       event_name,
       event_properties,
-      context.user_agent,
-      context.ip_address
+      context
     )
 
     # check if batching is enabled

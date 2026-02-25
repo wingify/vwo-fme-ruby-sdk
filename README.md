@@ -104,6 +104,59 @@ user_context = {
 }
 ```
 
+### FME Web Connectivity
+
+FME Web Connectivity allows you to keep visitor identity and sessions in sync between the Ruby SDK and VWO Web Insights.
+
+#### Using web UUID from `context[:id]`
+
+When **web connectivity is enabled**, if you pass a valid VWO Web UUID in `context[:id]`, the Ruby SDK will **use it directly as the visitor UUID** instead of hashing/generating a new one.  
+You can then read the same UUID from the flag result via `flag.get_uuid` (for example, to pass it to the web client or other services).
+
+```ruby
+require 'vwo'
+
+vwo_client = VWO.init({
+  account_id: 123456,
+  sdk_key: '32-alpha-numeric-sdk-key'
+})
+
+# Default: SDK generates a UUID from id and account
+context_with_generated_uuid = { id: 'user-123' }
+flag1 = vwo_client.get_flag('feature-key', context_with_generated_uuid)
+uuid1 = flag1.get_uuid
+puts "Visitor UUID (generated): #{uuid1}"
+
+# Use your own UUID (e.g. from VWO Web SDK) by passing a valid web UUID in context[:id]
+context_with_custom_uuid = {
+  id: 'D7E2EAA667909A2DB8A6371FF0975C2A5' # your existing VWO Web UUID
+}
+flag2 = vwo_client.get_flag('feature-key', context_with_custom_uuid)
+uuid2 = flag2.get_uuid
+puts "Visitor UUID (from context[:id]): #{uuid2}"
+```
+
+If `context[:id]` is not a valid web UUID, the SDK falls back to server-side UUID derivation based on `id` and `account_id`, and `flag.get_uuid` will return that derived UUID.
+
+#### Working with `sessionId`
+
+The Ruby SDK also exposes the session identifier via `flag.get_session_id` on the flag result, which is useful for aligning sessions with the VWO Web SDK or other systems:
+
+- If you **provide** a `sessionId` in the context (as an `Integer`), the SDK uses it as-is.
+- If you **omit** `sessionId`, the SDK automatically generates one using the current Unix timestamp.
+
+```ruby
+# Reuse a session ID from your web layer
+context_with_session = {
+  id: 'user-123',
+  sessionId: Time.now.to_i # or a session ID from your web client
+}
+
+flag = vwo_client.get_flag('feature-key', context_with_session)
+session_id = flag.get_session_id
+puts "Session ID: #{session_id}"
+```
+
 ### Basic Feature Flagging
 
 Feature Flags serve as the foundation for all testing, personalization, and rollout rules within FME.

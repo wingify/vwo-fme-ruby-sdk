@@ -53,9 +53,9 @@ class ContextModel
     @post_segmentation_variables = context[:postSegmentationVariables] if context.key?(:postSegmentationVariables)
     @vwo = ContextVWOModel.new.model_from_dictionary(context[:_vwo]) if context.key?(:_vwo)
   
-    # check if sessionId is present in context and should be non null and non empty string
-    if context.key?(:sessionId) && context[:sessionId].is_a?(String) && !context[:sessionId].empty?
-      @session_id = context[:sessionId]
+    # check if sessionId is present in context and should be non null and non empty
+    if context.key?(:sessionId) && !context[:sessionId].nil? && !context[:sessionId].to_s.empty?
+      @session_id = context[:sessionId].to_i
     else
       @session_id = Time.now.to_i
     end

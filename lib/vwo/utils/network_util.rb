@@ -157,6 +157,17 @@ class NetworkUtil
 
         properties = _get_event_base_payload(user_id, event_name, visitor_user_agent, ip_address)
 
+        # use sessionId from context if present
+        if context.get_session_id
+            properties[:d][:sessionId] = context.get_session_id
+        end
+
+        # use uuid from context if present
+        if context.get_uuid && !context.get_uuid.empty?
+            properties[:d][:visId] = context.get_uuid
+            properties[:d][:msgId] = "#{context.get_uuid}-#{get_current_unix_timestamp_in_millis}"
+        end
+
         properties[:d][:event][:props][:id] = campaign_id
         properties[:d][:event][:props][:variation] = variation_id
         properties[:d][:event][:props][:isFirst] = 1
@@ -191,9 +202,20 @@ class NetworkUtil
     end
 
     # Constructs payload for tracking goals with custom event properties
-    def get_track_goal_payload_data(user_id, event_name, event_properties, visitor_user_agent = '', ip_address = '')
-        properties = _get_event_base_payload(user_id, event_name, visitor_user_agent, ip_address)
+    def get_track_goal_payload_data(event_name, event_properties, context)
+        properties = _get_event_base_payload(context.id, event_name, context.user_agent, context.ip_address)
         properties[:d][:event][:props][:isCustomEvent] = true
+
+        # use sessionId from context if present
+        if context.get_session_id
+            properties[:d][:sessionId] = context.get_session_id
+        end
+
+        # use uuid from context if present
+        if context.get_uuid && !context.get_uuid.empty?
+            properties[:d][:visId] = context.get_uuid
+            properties[:d][:msgId] = "#{context.get_uuid}-#{get_current_unix_timestamp_in_millis}"
+        end
 
         if SettingsService.instance.is_gateway_service_provided
             properties[:d][:event][:props][:variation] = 1
@@ -207,15 +229,26 @@ class NetworkUtil
         LoggerService.log(LogLevelEnum::DEBUG, "IMPRESSION_FOR_TRACK_GOAL", {
             eventName: event_name,
             accountId: SettingsService.instance.account_id,
-            userId: user_id
+            userId: context.id
         })
 
         properties
     end
 
-    def get_attribute_payload_data(user_id, event_name, event_properties, visitor_user_agent = '', ip_address = '')
-        properties = _get_event_base_payload(user_id, event_name, visitor_user_agent, ip_address)
+    def get_attribute_payload_data(event_name, event_properties, context)
+        properties = _get_event_base_payload(context.id, event_name, context.user_agent, context.ip_address)
         properties[:d][:event][:props][:isCustomEvent] = true
+
+        # use sessionId from context if present
+        if context.get_session_id
+            properties[:d][:sessionId] = context.get_session_id
+        end
+
+        # use uuid from context if present
+        if context.get_uuid && !context.get_uuid.empty?
+            properties[:d][:visId] = context.get_uuid
+            properties[:d][:msgId] = "#{context.get_uuid}-#{get_current_unix_timestamp_in_millis}"
+        end
 
         if event_properties.is_a?(Hash) && !event_properties.empty?
             event_properties.each { |key, value| properties[:d][:visitor][:props][key] = value }
@@ -224,7 +257,7 @@ class NetworkUtil
         LoggerService.log(LogLevelEnum::DEBUG, "IMPRESSION_FOR_SYNC_VISITOR_PROP", {
             eventName: event_name,
             accountId: SettingsService.instance.account_id,
-            userId: user_id
+            userId: context.id
         })
         properties
     end

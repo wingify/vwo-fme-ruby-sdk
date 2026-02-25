@@ -18,7 +18,7 @@ require_relative '../../constants/constants'
 
 class SettingsModel
   attr_reader :sdk_key, :account_id, :usage_stats_account_id, :version, :collection_prefix,
-              :features, :campaigns, :campaign_groups, :groups, :poll_interval
+              :features, :campaigns, :campaign_groups, :groups, :poll_interval, :is_web_connectivity_enabled
 
   def initialize(settings)
     @sdk_key = settings["sdkKey"]
@@ -31,6 +31,7 @@ class SettingsModel
     @campaigns = []
     @campaign_groups = settings["campaignGroups"] || {}
     @groups = settings["groups"] || {}
+    @is_web_connectivity_enabled = settings.fetch("isWebConnectivityEnabled", true)
 
     process_features(settings)
     process_campaigns(settings)
@@ -92,5 +93,9 @@ class SettingsModel
     campaign_list.each do |campaign|
       @campaigns << CampaignModel.new.model_from_dictionary(campaign)
     end
+  end
+
+  def get_is_web_connectivity_enabled
+    @is_web_connectivity_enabled
   end
 end

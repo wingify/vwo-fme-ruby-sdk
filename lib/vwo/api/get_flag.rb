@@ -65,7 +65,7 @@ class FlagApi
     
             if variation
               LoggerService.log(LogLevelEnum::INFO, "STORED_VARIATION_FOUND", {variationKey: variation.get_key, userId: context.get_id, experimentKey: stored_data[:experiment_key], experimentType: "experiment"})
-              return GetFlagResponse.new(true, variation.get_variables)
+              return GetFlagResponse.new(true, variation.get_variables, context.get_uuid, context.get_session_id)
             end
           end
         elsif stored_data && stored_data[:rollout_key] && stored_data[:rollout_id]
@@ -91,7 +91,7 @@ class FlagApi
   
       if feature.nil?
         LoggerService.log(LogLevelEnum::ERROR, "FEATURE_NOT_FOUND", {featureKey: feature_key, an: ApiEnum::GET_FLAG, sId: context.get_session_id, uuid: context.get_uuid})
-        return GetFlagResponse.new(false, [])
+        return GetFlagResponse.new(false, [], context.get_uuid, context.get_session_id)
       end
   
       # Segmentation evaluation
@@ -219,7 +219,7 @@ class FlagApi
       end
   
       # Return final evaluated feature flag
-      return GetFlagResponse.new(is_enabled, experiment_variation_to_return&.get_variables || rollout_variation_to_return&.get_variables || [])
+      return GetFlagResponse.new(is_enabled, experiment_variation_to_return&.get_variables || rollout_variation_to_return&.get_variables || [], context.get_uuid, context.get_session_id)
     end
   
     private

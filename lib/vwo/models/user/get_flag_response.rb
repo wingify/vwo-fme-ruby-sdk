@@ -13,26 +13,38 @@
 # limitations under the License.
 
 class GetFlagResponse
-    attr_reader :is_enabled, :get_variables, :get_variable
+  attr_reader :is_enabled, :get_variables, :get_variable, :get_uuid, :get_session_id
   
-    def initialize(is_enabled, variables = [])
-      @is_enabled = is_enabled
-      @variables = variables
-    end
-  
-    # Define method for is_enabled
-    def is_enabled
-      @is_enabled
-    end
-  
-    # Define method for get_variables
-    def get_variables
-      @variables
-    end
-  
-    # Define method for get_variable
-    def get_variable(key, default_value = nil)
-        variable = @variables.find { |var| var.key == key }
-        variable ? variable.value : default_value
-    end
+  def initialize(is_enabled, variables = [], uuid = nil, session_id = nil)
+    @is_enabled = is_enabled
+    @variables = variables
+    @uuid = uuid
+    @session_id = session_id
   end
+  
+  # Define method for is_enabled
+  def is_enabled
+    @is_enabled
+  end
+
+  # Define method for get_variables
+  def get_variables
+    @variables
+  end
+
+  # Define method for get_variable
+  def get_variable(key, default_value = nil)
+      variable = @variables.find { |var| var.key == key }
+      variable ? variable.value : default_value
+  end
+
+  # Define method for get_uuid
+  def get_uuid
+    @uuid
+  end
+
+  # Define method for get_session_id
+  def get_session_id
+    @session_id
+  end
+end

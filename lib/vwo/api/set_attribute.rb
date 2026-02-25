@@ -40,11 +40,9 @@ class SetAttributeApi
 
     # Construct payload data for multiple attributes
     payload = NetworkUtil.get_attribute_payload_data(
-      context.id,
       EventEnum::VWO_SYNC_VISITOR_PROP,
       attributes,
-      context.user_agent,
-      context.ip_address
+      context
     )
 
     # check if batching is enabled

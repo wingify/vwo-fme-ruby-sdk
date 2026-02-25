@@ -106,4 +106,20 @@ class VWO
       puts "[ERROR]: VWO-SDK: Got error while initializing VWO: #{e.message}"
     end
   end
+
+  # Generates a UUID for a user based on their user_id and account_id.
+  #
+  # @param user_id [String] The user's ID.
+  # @param account_id [String] The account ID associated with the user.
+  # @return [String] A UUID string formatted without dashes and in uppercase.
+  def self.get_uuid(user_id, account_id)
+    # check if user_id and account_id are non-empty strings
+    if !user_id.is_a?(String) || user_id.empty? || !account_id.is_a?(String) || account_id.empty?
+      puts "User ID and account ID must be non-empty strings"
+      return nil
+    end
+    
+    # generate and return a new uuid based on user_id and account_id
+    return UUIDUtil.get_uuid(user_id, account_id)
+  end
 end

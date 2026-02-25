@@ -16,5 +16,6 @@
 
     "EVENT_BATCH_BEFORE_FLUSHING": "Flushing event queue {manually} having {length} events for Account ID:{accountId}. {timer}",
     "EVENT_BATCH_FLUSH": "Manually flushing batch events for Account ID:{accountId} having {queueLength} events",
-    "BATCH_QUEUE_EMPTY": "Batch queue is empty. Nothing to flush."
+    "BATCH_QUEUE_EMPTY": "Batch queue is empty. Nothing to flush.",
+    "WEB_UUID_FOUND": "VWO Web Testing identified UUID {uuid} as the Context ID for API {apiName}"
   }

@@ -17,7 +17,7 @@
 # Define the Constants module
 module Constants
   SDK_NAME = 'vwo-fme-ruby-sdk'.freeze
-  SDK_VERSION = '1.8.0'.freeze
+  SDK_VERSION = '1.9.0'.freeze
 
   MAX_TRAFFIC_PERCENT = 100
   MAX_TRAFFIC_VALUE = 10_000
@@ -31,6 +31,7 @@ module Constants
   MIN_EVENTS_PER_REQUEST = 1
 
   SEED_URL = 'https://vwo.com'.freeze  # Define SEED_URL
+  WEB_UUID_REGEX = /\A[DJ][0-9A-Fa-f]{32}\z/.freeze
   HTTP_PROTOCOL = 'http'.freeze
   HTTPS_PROTOCOL = 'https'.freeze
 

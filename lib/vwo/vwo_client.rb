@@ -24,6 +24,7 @@ require_relative 'utils/network_util'
 require_relative 'models/schemas/settings_schema_validation'
 require_relative 'services/batch_event_queue'
 require_relative 'enums/api_enum'
+require_relative 'utils/uuid_util'
 
 class VWOClient
   attr_accessor :settings, :original_settings
@@ -49,11 +50,30 @@ class VWOClient
   # @return [GetFlagResponse] The flag for the given feature key and context
   def get_flag(feature_key, context)
     api_name = 'get_flag'
-    error_response = GetFlagResponse.new(false, [])
+    uuid = nil
+    session_id = nil
+
+    # check if sessionId is present in context and should be non null and non empty
+    if context.is_a?(Hash) && context.key?(:sessionId) && !context[:sessionId].nil? && !context[:sessionId].to_s.empty?
+      session_id = context[:sessionId].to_i
+    else
+      session_id = Time.now.to_i
+    end
   
     begin
       hooks_service = HooksService.new(@options)
       LoggerService.log(LogLevelEnum::DEBUG, "API_CALLED", {apiName: api_name})
+      unless context.is_a?(Hash)
+        raise TypeError, 'Invalid context'
+      end
+      unless context[:id].is_a?(String) && !context[:id].empty?
+        raise TypeError, 'Invalid context, id should be a non-empty string'
+      end
+      # make a copy of the context to avoid modifying the original context
+      context_copy = context.dup
+      uuid = UUIDUtil.get_uuid_from_context(@settings, context_copy, api_name)
+      # add the uuid to the context copy
+      context_copy[:uuid] = uuid
 
       unless feature_key.is_a?(String) && !feature_key.empty?
         raise TypeError, 'feature_key should be a non-empty string'
@@ -61,18 +81,12 @@ class VWOClient
       unless SettingsService.instance.is_settings_valid
         raise TypeError, 'Invalid Settings'
       end
-      unless context.is_a?(Hash)
-        raise TypeError, 'Invalid context'
-      end
-      unless context[:id].is_a?(String) && !context[:id].empty?
-        raise TypeError, 'Invalid context, id should be a non-empty string'
-      end
       
-      context_model = ContextModel.new.model_from_dictionary(context)
+      context_model = ContextModel.new.model_from_dictionary(context_copy)
       FlagApi.new.get(feature_key, @settings, context_model, hooks_service)
     rescue StandardError => e
       LoggerService.log(LogLevelEnum::ERROR, "EXECUTION_FAILED", {apiName: api_name, err: e.message, an: ApiEnum::GET_FLAG})
-      error_response
+      GetFlagResponse.new(false, [], uuid, session_id)
     end
   end
 
@@ -87,7 +101,14 @@ class VWOClient
     begin
       hooks_service = HooksService.new(@options)
       LoggerService.log(LogLevelEnum::DEBUG, "API_CALLED", {apiName: api_name})
-      
+
+      unless context.is_a?(Hash) && context[:id].is_a?(String) && !context[:id].empty?
+        raise TypeError, 'Invalid context, id should be a non-empty string'
+      end
+      # make a copy of the context to avoid modifying the original context
+      context_copy = context.dup
+      context_copy[:uuid] = UUIDUtil.get_uuid_from_context(@settings, context_copy, api_name)
+
       unless event_name.is_a?(String) && !event_name.empty?
         raise TypeError, 'event_name should be a non-empty string'
       end
@@ -97,11 +118,8 @@ class VWOClient
       unless SettingsService.instance.is_settings_valid
         raise TypeError, 'Invalid Settings'
       end
-      unless context[:id].is_a?(String) && !context[:id].empty?
-        raise TypeError, 'Invalid context, id should be a non-empty string'
-      end
       
-      context_model = ContextModel.new.model_from_dictionary(context)
+      context_model = ContextModel.new.model_from_dictionary(context_copy)
       TrackApi.new.track(@settings, event_name, context_model, event_properties, hooks_service)
     rescue StandardError => e
       LoggerService.log(LogLevelEnum::ERROR, "EXECUTION_FAILED", {apiName: api_name, err: e.message, an: ApiEnum::TRACK_EVENT})
@@ -118,21 +136,24 @@ class VWOClient
     
     begin
       LoggerService.log(LogLevelEnum::DEBUG, "API_CALLED", {apiName: api_name})
-
-      unless attributes.is_a?(Hash) && !attributes.empty?
-        raise TypeError, 'Attributes should be a hash with key-value pairs and non-empty'
-      end
       unless context.is_a?(Hash)
         raise TypeError, 'Invalid context'
       end
       unless context[:id].is_a?(String) && !context[:id].empty?
         raise TypeError, 'Invalid context, id should be a non-empty string'
       end
+      # make a copy of the context to avoid modifying the original context
+      context_copy = context.dup
+      context_copy[:uuid] = UUIDUtil.get_uuid_from_context(@settings, context_copy, api_name)
+
+      unless attributes.is_a?(Hash) && !attributes.empty?
+        raise TypeError, 'Attributes should be a hash with key-value pairs and non-empty'
+      end
       unless SettingsService.instance.is_settings_valid
         raise TypeError, 'Invalid Settings'
       end
       
-      context_model = ContextModel.new.model_from_dictionary(context)
+      context_model = ContextModel.new.model_from_dictionary(context_copy)
       SetAttributeApi.new.set_attribute(attributes, context_model)
     rescue StandardError => e
       LoggerService.log(LogLevelEnum::ERROR, "EXECUTION_FAILED", {apiName: api_name, err: e.message, an: ApiEnum::SET_ATTRIBUTE})
