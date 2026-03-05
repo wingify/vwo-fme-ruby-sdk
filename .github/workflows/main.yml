@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [ master, github-action ]
+    branches: [ master, github-action, feature/dependencyUpdate ]
   pull_request:
     branches: [ master ]
 
