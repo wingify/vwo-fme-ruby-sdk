@@ -17,9 +17,9 @@ require_relative '../../utils/uuid_util'
 require_relative '../../services/settings_service'
 
 class ContextModel
-  attr_accessor :id, :user_agent, :ip_address, :custom_variables, :variation_targeting_variables, :post_segmentation_variables, :vwo, :session_id, :uuid
+  attr_accessor :id, :user_agent, :ip_address, :custom_variables, :variation_targeting_variables, :post_segmentation_variables, :vwo, :session_id, :uuid, :bucketing_seed
 
-  def initialize(id = nil, user_agent = nil, ip_address = nil, custom_variables = {}, variation_targeting_variables = {}, post_segmentation_variables = {}, vwo = nil, session_id = nil, uuid = nil)
+  def initialize(id = nil, user_agent = nil, ip_address = nil, custom_variables = {}, variation_targeting_variables = {}, post_segmentation_variables = {}, vwo = nil, session_id = nil, uuid = nil, bucketing_seed = nil)
     @id = id
     @user_agent = user_agent
     @ip_address = ip_address
@@ -29,6 +29,7 @@ class ContextModel
     @vwo = vwo
     @session_id = session_id
     @uuid = uuid
+    @bucketing_seed = bucketing_seed
   end
 
   # Creates a model instance from a hash (dictionary)
@@ -52,7 +53,8 @@ class ContextModel
     @variation_targeting_variables = context[:variationTargetingVariables] if context.key?(:variationTargetingVariables)
     @post_segmentation_variables = context[:postSegmentationVariables] if context.key?(:postSegmentationVariables)
     @vwo = ContextVWOModel.new.model_from_dictionary(context[:_vwo]) if context.key?(:_vwo)
-  
+    @bucketing_seed = context[:bucketingSeed].to_s if context.key?(:bucketingSeed)
+
     # check if sessionId is present in context and should be non null and non empty
     if context.key?(:sessionId) && !context[:sessionId].nil? && !context[:sessionId].to_s.empty?
       @session_id = context[:sessionId].to_i
@@ -140,5 +142,13 @@ class ContextModel
 
   def set_uuid(uuid)
     @uuid = uuid
+  end
+
+  def get_bucketing_seed
+    @bucketing_seed
+  end
+
+  def set_bucketing_seed(bucketing_seed)
+    @bucketing_seed = bucketing_seed
   end
 end

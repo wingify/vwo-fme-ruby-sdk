@@ -110,7 +110,7 @@ def is_rollout_rule_for_feature_passed(settings, feature, evaluated_feature_map,
 
     if rule_to_test_for_traffic
       campaign = CampaignModel.new.model_from_dictionary(rule_to_test_for_traffic)
-      variation = evaluate_traffic_and_get_variation(settings, campaign, context.id)
+      variation = evaluate_traffic_and_get_variation(settings, campaign, context)
       if variation.is_a?(VariationModel) && !variation.nil? && variation.id.is_a?(Integer)
         evaluated_feature_map[feature.key] = {
           rollout_id: rule_to_test_for_traffic.id,
@@ -160,7 +160,7 @@ def get_eligible_campaigns(settings, campaign_map, context, storage_service)
       end
 
       # Check if user is eligible for the campaign
-      if CampaignDecisionService.new.get_pre_segmentation_decision(campaign, context) && CampaignDecisionService.new.is_user_part_of_campaign(context.id, campaign)
+      if CampaignDecisionService.new.get_pre_segmentation_decision(campaign, context) && CampaignDecisionService.new.is_user_part_of_campaign(context, campaign)
         LoggerService.log(LogLevelEnum::INFO, "MEG_CAMPAIGN_ELIGIBLE", { campaignKey: campaign.key, userId: context.id })
 
         eligible_campaigns.push(campaign)
@@ -231,7 +231,7 @@ def normalize_weights_and_find_winning_campaign(shortlisted_campaigns, context, 
 
   winner_campaign = CampaignDecisionService.new.get_variation(
     shortlisted_variations,
-    DecisionMaker.new.calculate_bucket_value(CampaignUtil.get_bucketing_seed(context.id, nil, group_id))
+    DecisionMaker.new.calculate_bucket_value(CampaignUtil.get_bucketing_seed(context.get_bucketing_seed || context.get_id, nil, group_id))
   )
 
   if winner_campaign
@@ -315,7 +315,7 @@ def get_campaign_using_advanced_algo(settings, shortlisted_campaigns, context, c
     CampaignUtil.set_campaign_allocation(participating_campaign_list)
     winner_campaign = CampaignDecisionService.new.get_variation(
       participating_campaign_list,
-      DecisionMaker.new.calculate_bucket_value(CampaignUtil.get_bucketing_seed(context.id, nil, group_id))
+      DecisionMaker.new.calculate_bucket_value(CampaignUtil.get_bucketing_seed(context.get_bucketing_seed || context.get_id, nil, group_id))
     )
   end
 

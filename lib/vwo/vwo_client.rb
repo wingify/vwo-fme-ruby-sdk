@@ -75,6 +75,15 @@ class VWOClient
       # add the uuid to the context copy
       context_copy[:uuid] = uuid
 
+      # Validate bucketingSeed: must be a non-empty, non-whitespace-only string
+      if context_copy.key?(:bucketingSeed)
+        seed = context_copy[:bucketingSeed]
+        if seed.nil? || seed.is_a?(Numeric) || seed.is_a?(Hash) || seed.is_a?(Array) || (seed.is_a?(String) && seed.strip.empty?)
+          LoggerService.log(LogLevelEnum::ERROR, "INVALID_BUCKETING_SEED", { apiName: api_name, type: seed.class.name })
+          context_copy.delete(:bucketingSeed)
+        end
+      end
+
       unless feature_key.is_a?(String) && !feature_key.empty?
         raise TypeError, 'feature_key should be a non-empty string'
       end

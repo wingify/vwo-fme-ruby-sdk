@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.11.0] - 2026-03-18
+
+### Added
+
+- Added support for **Custom Bucketing Seed** via the `bucketingSeed` key in the user context. When provided, the SDK uses this value instead of the user ID as input to the bucketing algorithm. This enables deterministic variation assignment across different users who share the same seed — useful for group testing.
+
+    Example usage:
+    ```ruby
+    require 'vwo'
+
+    vwo_client = VWO.init({
+      sdk_key: '32-alpha-numeric-sdk-key',
+      account_id: '123456'
+    })
+
+    # All employees of company-abc will get the same variation
+    context = {
+      id: 'employee-123',
+      bucketingSeed: 'company-abc'
+    }
+    flag = vwo_client.get_flag('feature-key', context)
+    ```
+
 ## [1.10.0] - 2026-03-06
 
 ### Added

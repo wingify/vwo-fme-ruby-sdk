@@ -168,19 +168,25 @@ class DecisionUtil
   # @param settings [SettingsModel] The settings for the VWO instance
   # @param campaign [CampaignModel] The campaign to evaluate
   # @param user_id [String] The ID of the user
-  def self.evaluate_traffic_and_get_variation(settings, campaign, user_id)
-    variation = CampaignDecisionService.new.get_variation_alloted(user_id, settings.get_account_id, campaign)
+  def self.evaluate_traffic_and_get_variation(settings, campaign, context)
+    variation = CampaignDecisionService.new.get_variation_alloted(context, settings.get_account_id, campaign)
+
+    user_id = context.get_id
+    bucketing_seed = context.get_bucketing_seed
+    bucketing_id = bucketing_seed || user_id
+    display_user_id = bucketing_id != user_id ? "#{user_id} (Seed: #{bucketing_id})" : user_id
+
     if variation.nil?
       LoggerService.log(LogLevelEnum::INFO, "USER_CAMPAIGN_BUCKET_INFO", {
         campaignKey: campaign.get_type == CampaignTypeEnum::AB ? campaign.get_key : "#{campaign.get_name}_#{campaign.get_rule_key}",
-        userId: user_id,
+        userId: display_user_id,
         status: 'did not get any variation'
       })
       return nil
     end
     LoggerService.log(LogLevelEnum::INFO, "USER_CAMPAIGN_BUCKET_INFO", {
       campaignKey: campaign.get_type == CampaignTypeEnum::AB ? campaign.get_key : "#{campaign.get_name}_#{campaign.get_rule_key}",
-      userId: user_id,
+      userId: display_user_id,
       status: "got variation: #{variation.get_key}"
     })
     variation
@@ -236,7 +242,7 @@ class DecisionUtil
 
       whitelisted_variation = CampaignDecisionService.new.get_variation(
         targeted_variations,
-        DecisionMaker.new.calculate_bucket_value(CampaignUtil.get_bucketing_seed(context.get_id, campaign, nil))
+        DecisionMaker.new.calculate_bucket_value(CampaignUtil.get_bucketing_seed(context.get_bucketing_seed || context.get_id, campaign, nil))
       )
     else
       whitelisted_variation = targeted_variations.first

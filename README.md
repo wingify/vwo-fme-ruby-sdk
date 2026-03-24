@@ -92,6 +92,7 @@ The following table explains all the parameters in the `context` hash:
 | `customVariables`| Custom attributes for targeting.                                           | No           | Hash     | `{ age: 25, location: 'US' }`     |
 | `userAgent`      | User agent string for identifying the user's browser and operating system. | No           | String   | `'Mozilla/5.0 ... Safari/537.36'` |
 | `ipAddress`      | IP address of the user.                                                    | No           | String   | `'1.1.1.1'`                       |
+| `bucketingSeed`  | Custom seed for bucketing. Overrides user ID in the hashing algorithm to control variation assignment. Must be a non-empty string. | No | String | `'account-xyz'` |
 
 #### Example
 
@@ -155,6 +156,25 @@ context_with_session = {
 flag = vwo_client.get_flag('feature-key', context_with_session)
 session_id = flag.get_session_id
 puts "Session ID: #{session_id}"
+```
+
+### Custom Bucketing Seed
+
+By default, the SDK uses the user `id` to determine which variation a user receives. The `bucketingSeed` option in the context lets you override this with a shared identifier (e.g. a company ID), so all users sharing the same seed are bucketed into the same variation.
+
+| Parameter       | Description                                               | Required | Type   | Example         |
+| --------------- | --------------------------------------------------------- | -------- | ------ | --------------- |
+| `bucketingSeed` | A custom string used for bucketing instead of user `id`   | No       | String | `'company-abc'` |
+
+#### Example Usage
+
+```ruby
+# All employees of company-abc will get the same variation
+context = {
+  id: 'employee-123',
+  bucketingSeed: 'company-abc'
+}
+flag = vwo_client.get_flag('feature-key', context)
 ```
 
 ### Basic Feature Flagging

@@ -30,20 +30,24 @@ class CampaignDecisionService
   # @param user_id [String] The ID of the user
   # @param campaign [CampaignModel] The campaign to check
   # @return [Boolean] True if the user is part of the campaign, false otherwise
-  def is_user_part_of_campaign(user_id, campaign)
-    return false if campaign.nil? || user_id.nil?
+  def is_user_part_of_campaign(context, campaign)
+    return false if campaign.nil? || context.nil?
+
+    user_id = context.get_id
+    bucketing_seed = context.get_bucketing_seed
+    bucketing_id = bucketing_seed || user_id
 
     is_rollout_or_personalize = [CampaignTypeEnum::ROLLOUT, CampaignTypeEnum::PERSONALIZE].include?(campaign.get_type)
     salt = is_rollout_or_personalize ? campaign.get_variations.first.get_salt : campaign.get_salt
     traffic_allocation = is_rollout_or_personalize ? campaign.get_variations.first.get_weight : campaign.get_traffic
 
-    bucket_key = salt ? "#{salt}_#{user_id}" : "#{campaign.get_id}_#{user_id}"
+    bucket_key = salt ? "#{salt}_#{bucketing_id}" : "#{campaign.get_id}_#{bucketing_id}"
     value_assigned_to_user = DecisionMaker.new.get_bucket_value_for_user(bucket_key)
 
     is_user_part = value_assigned_to_user != 0 && value_assigned_to_user <= traffic_allocation
 
     LoggerService.log(LogLevelEnum::INFO, "USER_PART_OF_CAMPAIGN", {
-      userId: user_id,
+      userId: bucketing_id != user_id ? "#{user_id} (Seed: #{bucketing_id})" : user_id,
       notPart: is_user_part ? '' : 'not',
       campaignKey: campaign.get_type == CampaignTypeEnum::AB ? campaign.get_key : "#{campaign.get_name}_#{campaign.get_rule_key}"
     })
@@ -72,19 +76,23 @@ class CampaignDecisionService
   # @param account_id [String] The ID of the account
   # @param campaign [CampaignModel] The campaign to bucket the user into
   # @return [VariationModel] The variation assigned to the user
-  def bucket_user_to_variation(user_id, account_id, campaign)
-    return nil if campaign.nil? || user_id.nil?
+  def bucket_user_to_variation(context, account_id, campaign)
+    return nil if campaign.nil? || context.nil?
+
+    user_id = context.get_id
+    bucketing_seed = context.get_bucketing_seed
+    bucketing_id = bucketing_seed || user_id
 
     multiplier = campaign.get_traffic ? 1 : nil
     percent_traffic = campaign.get_traffic
     salt = campaign.get_salt
-    bucket_key = salt ? "#{salt}_#{account_id}_#{user_id}" : "#{campaign.get_id}_#{account_id}_#{user_id}"
-    
+    bucket_key = salt ? "#{salt}_#{account_id}_#{bucketing_id}" : "#{campaign.get_id}_#{account_id}_#{bucketing_id}"
+
     hash_value = DecisionMaker.new.generate_hash_value(bucket_key)
     bucket_value = DecisionMaker.new.generate_bucket_value(hash_value, Constants::MAX_TRAFFIC_VALUE, multiplier)
 
     LoggerService.log(LogLevelEnum::DEBUG, "USER_BUCKET_TO_VARIATION", {
-      userId: user_id,
+      userId: bucketing_id != user_id ? "#{user_id} (Seed: #{bucketing_id})" : user_id,
       campaignKey: campaign.get_key,
       percentTraffic: percent_traffic,
       bucketValue: bucket_value,
@@ -139,13 +147,13 @@ class CampaignDecisionService
   # @param account_id [String] The ID of the account
   # @param campaign [CampaignModel] The campaign to evaluate
   # @return [VariationModel] The variation assigned to the user
-  def get_variation_alloted(user_id, account_id, campaign)
-    is_user_part = is_user_part_of_campaign(user_id, campaign)
+  def get_variation_alloted(context, account_id, campaign)
+    is_user_part = is_user_part_of_campaign(context, campaign)
 
     if [CampaignTypeEnum::ROLLOUT, CampaignTypeEnum::PERSONALIZE].include?(campaign.get_type)
       return campaign.get_variations.first if is_user_part
     else
-      return bucket_user_to_variation(user_id, account_id, campaign) if is_user_part
+      return bucket_user_to_variation(context, account_id, campaign) if is_user_part
     end
 
     nil

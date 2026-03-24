@@ -122,7 +122,7 @@ class FlagApi
   
         if rollout_rules_to_evaluate.any?
           passed_rollout_campaign = CampaignModel.new.model_from_dictionary(rollout_rules_to_evaluate.first)
-          variation = DecisionUtil.evaluate_traffic_and_get_variation(settings, passed_rollout_campaign, context.get_id)
+          variation = DecisionUtil.evaluate_traffic_and_get_variation(settings, passed_rollout_campaign, context)
   
           if variation
             is_enabled = true
@@ -168,7 +168,7 @@ class FlagApi
   
         if experiment_rules_to_evaluate.any?
           campaign = CampaignModel.new.model_from_dictionary(experiment_rules_to_evaluate.first)
-          variation = DecisionUtil.evaluate_traffic_and_get_variation(settings, campaign, context.get_id)
+          variation = DecisionUtil.evaluate_traffic_and_get_variation(settings, campaign, context)
   
           if variation
             is_enabled = true
