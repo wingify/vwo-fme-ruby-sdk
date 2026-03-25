@@ -115,7 +115,7 @@ class VWOBuilder
     return @settings if !force && @settings
     
     @is_settings_fetch_in_progress = true
-    settings = SettingsService.new(@options).get_settings(force)
+    settings = SettingsService.new(@options).get_settings()
     @is_settings_fetch_in_progress = false
     @settings = settings unless force
     settings

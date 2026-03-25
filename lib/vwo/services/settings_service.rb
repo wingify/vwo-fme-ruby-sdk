@@ -149,22 +149,17 @@ class SettingsService
   end
 
   # Get settings (either from storage or by forcing fetch).
-  # @param force_fetch [Boolean] Whether to force fetch the settings
   # @return [SettingsModel] The fetched settings
-  def get_settings(force_fetch = false)
-    if force_fetch
-      fetch_settings_and_cache_in_storage
+  def get_settings
+    settings = fetch_settings_and_cache_in_storage
+    is_valid = SettingsSchema.new.is_settings_valid(settings)
+    if is_valid
+      @is_settings_valid = true
+      LoggerService.log(LogLevelEnum::INFO, "SETTINGS_FETCH_SUCCESS")
+      settings
     else
-      settings = fetch_settings_and_cache_in_storage
-      is_valid = SettingsSchema.new.is_settings_valid(settings)
-      if is_valid
-        @is_settings_valid = true
-        LoggerService.log(LogLevelEnum::INFO, "SETTINGS_FETCH_SUCCESS")
-        settings
-      else
-        LoggerService.log(LogLevelEnum::ERROR, "INVALID_SETTINGS_SCHEMA", { accountId: @account_id, sdkKey: @sdk_key, settings: settings, an: ApiEnum::INIT}, false)
-        {}
-      end
+      LoggerService.log(LogLevelEnum::ERROR, "INVALID_SETTINGS_SCHEMA", { accountId: @account_id, sdkKey: @sdk_key, settings: settings, an: ApiEnum::INIT}, false)
+      {}
     end
   end
 end

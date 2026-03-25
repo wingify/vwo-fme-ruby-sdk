@@ -1,6 +1,6 @@
 Gem::Specification.new do |spec|
     spec.name          = 'vwo-fme-ruby-sdk'
-    spec.version       = '1.11.0'
+    spec.version       = '1.12.0'
     spec.authors       = ['VWO']
     spec.email         = ['dev@wingify.com']
 
@@ -24,15 +24,7 @@ Gem::Specification.new do |spec|
     # spec.add_dependency 'net-http', '~> 0.2.0'
     # spec.add_dependency 'concurrent-ruby', '~> 1.2.0'
     spec.add_dependency "concurrent-ruby", ">= 1.2.0", "< 2.0"
-    
-    # conditional net-http dependency
-    if Gem::Version.new(RUBY_VERSION) >= Gem::Version.new('3.0')
-  	  spec.add_dependency "net-http", ">= 0.4.0"
-	else
-  	  # For Ruby 2.6/2.7, we don't add it as a gem dependency 
-  	  # because it's already part of the Standard Library.
-	end
-
+    spec.add_dependency "net-http", ">= 0.4", "< 1.0"
     spec.required_ruby_version = '>= 2.6.0'
 
     # Testing dependencies (development only)
