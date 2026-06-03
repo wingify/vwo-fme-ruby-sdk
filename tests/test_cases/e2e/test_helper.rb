@@ -1,4 +1,4 @@
-# Copyright 2024-2025 Wingify Software Pvt. Ltd.
+# Copyright 2024-2026 Wingify Software Pvt. Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require_relative '../../../lib/vwo/services/settings_service'
-require 'test/unit'
+require_relative '../../../lib/wingify/services/settings_service'
+require 'minitest/autorun'
 $LOAD_PATH.unshift File.expand_path('../../../lib', __dir__)
 $LOAD_PATH.unshift File.expand_path('../../data', __dir__)
 

@@ -1,4 +1,4 @@
-# Copyright 2024-2025 Wingify Software Pvt. Ltd.
+# Copyright 2024-2026 Wingify Software Pvt. Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,14 +15,14 @@
 require 'minitest/autorun'
 require 'mocha/minitest'
 require_relative '../../../lib/vwo'
-require_relative '../../../lib/vwo/vwo_builder'
-require_relative '../../../lib/vwo/vwo_client'
-require_relative '../../../lib/vwo/services/logger_service'
+require_relative '../../../lib/wingify/wingify_builder'
+require_relative '../../../lib/wingify/wingify_client'
+require_relative '../../../lib/wingify/services/logger_service'
 require_relative '../../data/storage_test'
 require_relative '../../data/dummy_settings_reader'
 require_relative '../../data/test_cases/test_cases'
 require_relative '../../data/test_data_reader'
-require_relative '../../../lib/vwo/packages/storage/storage'
+require_relative '../../../lib/wingify/packages/storage/storage'
 require_relative 'test_helper'
 
 class VWOClientTest < Minitest::Test

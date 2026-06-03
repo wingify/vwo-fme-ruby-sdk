@@ -1,4 +1,4 @@
-# Copyright 2024-2025 Wingify Software Pvt. Ltd.
+# Copyright 2024-2026 Wingify Software Pvt. Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,9 +14,9 @@
 
 require 'minitest/autorun'
 require 'json'
-require_relative '../../../../lib/vwo/services/settings_service'
-require_relative '../../../../lib/vwo/services/logger_service'
-require_relative '../../../../lib/vwo/models/schemas/settings_schema_validation'
+require_relative '../../../../lib/wingify/services/settings_service'
+require_relative '../../../../lib/wingify/services/logger_service'
+require_relative '../../../../lib/wingify/models/schemas/settings_schema_validation'
 
 class SettingsSchemaValidationTest < Minitest::Test
   def setup

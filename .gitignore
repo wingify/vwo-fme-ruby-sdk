@@ -5,3 +5,4 @@
 *.lock
 *.yml
 .ruby-version
+vendor/

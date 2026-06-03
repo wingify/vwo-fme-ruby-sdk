@@ -6,6 +6,10 @@ gem 'murmurhash3', '~> 0.1.6'
 gem 'net-http', '~> 0.2.0'
 gem 'concurrent-ruby', '~> 1.2.0'
 gem 'json', '~> 2.5'
+gem 'logger'
+gem 'bigdecimal'
+gem 'base64'
+gem 'mutex_m'
 
 group :development, :test do
   # Add any other test-specific gems you need here

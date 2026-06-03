@@ -5,6 +5,69 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.50.0] - 2026-06-01
+
+This release introduces **Wingify** as the primary SDK branding and a new gem package namespace, while keeping existing **VWO** integrations fully supported on `vwo-fme-ruby-sdk`.
+
+### Added
+
+- **Wingify gem package** — `wingify-fme-ruby-sdk` is built from the same codebase as the VWO package. Install the Wingify package for new integrations:
+
+  ```bash
+  gem install wingify-fme-ruby-sdk
+  ```
+
+- **Wingify public API** — use `Wingify.init`, `WingifyBuilder`, and `WingifyClient` as the recommended entry points for new integrations:
+
+  ```ruby
+  require 'wingify'
+
+  client = Wingify.init({
+    account_id: '123456',
+    sdk_key: '32-alpha-numeric-sdk-key',
+    logger: { level: 'DEBUG' }
+  })
+
+  context = { id: 'user-123' }
+
+  flag = client.get_flag('feature-key', context)
+  puts "#{flag.is_enabled} #{flag.get_variation}"
+  ```
+
+### Changed
+
+- The SDK implementation now uses a shared core with build-time brand selection (`vwo` vs `wingify`). Wingify builds use Wingify-specific hosts (`edge.wingify.net` for settings, `collect.wingify.net` for events) and log prefix (`Wingify-SDK`).
+- **No breaking changes for existing `vwo-fme-ruby-sdk` integrations** — public exports, method signatures, server event names, payload keys, and runtime behavior remain compatible with the VWO platform.
+
+### Deprecated
+
+Nothing is deprecated on **`vwo-fme-ruby-sdk`**. Existing requires and modules continue to work without modification.
+
+For **new projects**, install `wingify-fme-ruby-sdk` instead of `vwo-fme-ruby-sdk`. The API surface is equivalent; only the package name and exported module names differ:
+
+| Existing VWO package (`vwo-fme-ruby-sdk`)             | Wingify package (`wingify-fme-ruby-sdk`) |
+| ----------------------------------------------------- | ---------------------------------------- |
+| `VWO.init`, `VWO.get_uuid`                            | `Wingify.init`, `Wingify.get_uuid`       |
+| `VWOBuilder`                                          | `WingifyBuilder`                         |
+| `VWOClient`                                           | `WingifyClient`                          |
+
+Existing code on **`vwo-fme-ruby-sdk` does not need to change**:
+
+```ruby
+require 'vwo'
+
+vwo_client = VWO.init({
+  account_id: '123456',
+  sdk_key: '32-alpha-numeric-sdk-key'
+})
+
+context = { id: 'user-123' }
+
+flag = vwo_client.get_flag('feature-key', context)
+```
+
+**Migration tip (optional, for new Wingify installs only):** Change the gem package from `vwo-fme-ruby-sdk` to `wingify-fme-ruby-sdk`, change `require 'vwo'` to `require 'wingify'`, and replace module references `VWO` → `Wingify`. Method signatures and SDK behavior are unchanged.
+
 ## [1.12.0] - 2026-03-24
 
 ### Fixed

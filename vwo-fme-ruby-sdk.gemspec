@@ -1,10 +1,11 @@
 Gem::Specification.new do |spec|
-    spec.name          = 'vwo-fme-ruby-sdk'
-    spec.version       = '1.12.0'
-    spec.authors       = ['VWO']
+    is_wingify = ENV['SDK_BRAND'] == 'wingify'
+    spec.name          = is_wingify ? 'wingify-fme-ruby-sdk' : 'vwo-fme-ruby-sdk'
+    spec.version       = '1.50.0'
+    spec.authors       = [is_wingify ? 'Wingify' : 'VWO']
     spec.email         = ['dev@wingify.com']
 
-    spec.summary       = 'VWO FME Ruby SDK'
+    spec.summary       = "#{is_wingify ? 'Wingify' : 'VWO'} FME Ruby SDK"
     spec.description   = 'A Ruby SDK for Feature Management And Experimentation'
     spec.license       = 'Apache-2.0'
 
@@ -24,7 +25,11 @@ Gem::Specification.new do |spec|
     # spec.add_dependency 'net-http', '~> 0.2.0'
     # spec.add_dependency 'concurrent-ruby', '~> 1.2.0'
     spec.add_dependency "concurrent-ruby", ">= 1.2.0", "< 2.0"
-    spec.add_dependency "net-http", ">= 0.4", "< 1.0"
+    spec.add_dependency "net-http", ">= 0.2", "< 1.0"
+    spec.add_dependency "logger"
+    spec.add_dependency "bigdecimal"
+    spec.add_dependency "base64"
+    spec.add_dependency "mutex_m"
     spec.required_ruby_version = '>= 2.6.0'
 
     # Testing dependencies (development only)
