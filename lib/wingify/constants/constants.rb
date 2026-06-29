@@ -17,7 +17,7 @@
 # Define the Constants module
 module Constants
   SDK_NAME = 'vwo-fme-ruby-sdk'.freeze
-  SDK_VERSION = '1.50.0'.freeze
+  SDK_VERSION = '1.55.0'.freeze
 
   # --- Brand-specific constants ---
 

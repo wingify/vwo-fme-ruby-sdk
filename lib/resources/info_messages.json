@@ -30,6 +30,7 @@
     "MEG_WINNER_CAMPAIGN": "MEG: Campaign {campaignKey} is the winner for group {groupId} for user ID:{userId} {algo}",
     "SETTINGS_UPDATED": "Settings fetched and updated successfully on the current {brand} client instance when API: {apiName} got called having isViaWebhook param as {isViaWebhook}",
     "NETWORK_CALL_SUCCESS": "Impression for {event} - {endPoint} was successfully received by {brand} having Account ID:{accountId}, UUID: {uuid}",
+    "USAGE_TRACKING_DISPATCHED": "FE track usage call dispatched for Account ID:{accountId}, User ID:{userId}, and feature key:{featureKey}",
 
     "EVENT_BATCH_DEFAULTS": "{parameter} in SDK configuration is missing or invalid (should be greater than {minLimit}). Using default value: {defaultValue}",
     "EVENT_QUEUE": "Event with payload:{event} pushed to the {queueType} queue",

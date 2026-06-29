@@ -293,6 +293,33 @@ class NetworkUtil
         properties
     end
 
+    # Constructs the payload data for usage tracking call.
+    # Sent to server when a user is evaluated via get_flag() but no variation_shown
+    # event is dispatched by the SDK.
+    # @param context [ContextModel] The context model instance.
+    # @returns [Hash] The constructed payload.
+    def get_tracking_usage_payload_data(context)
+        properties = _get_event_base_payload(context.get_id, EventEnum::USER_EVALUATED, context.get_user_agent, context.get_ip_address)
+
+        # use sessionId from context if present
+        if context.get_session_id
+            properties[:d][:sessionId] = context.get_session_id
+        end
+
+        # use uuid from context if present
+        if context.get_uuid && !context.get_uuid.empty?
+            properties[:d][:visId] = context.get_uuid
+            properties[:d][:msgId] = "#{context.get_uuid}-#{get_current_unix_timestamp_in_millis}"
+        end
+
+        LoggerService.log(LogLevelEnum::DEBUG, "IMPRESSION_FOR_USAGE_TRACKING", {
+            accountId: SettingsService.instance.account_id,
+            userId: context.get_id
+        })
+
+        properties
+    end
+
     # Sends a POST API request with given properties and payload
     def send_post_api_request(properties, payload, campaign_info = {})
         network_instance = NetworkManager.instance

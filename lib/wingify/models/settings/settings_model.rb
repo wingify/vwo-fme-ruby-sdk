@@ -18,7 +18,7 @@ require_relative '../../constants/constants'
 
 class SettingsModel
   attr_reader :sdk_key, :account_id, :usage_stats_account_id, :version, :collection_prefix,
-              :features, :campaigns, :campaign_groups, :groups, :poll_interval, :is_web_connectivity_enabled
+              :features, :campaigns, :campaign_groups, :groups, :poll_interval, :is_web_connectivity_enabled, :is_tracking_usage_enabled
 
   def initialize(settings)
     @sdk_key = settings["sdkKey"]
@@ -32,6 +32,7 @@ class SettingsModel
     @campaign_groups = settings["campaignGroups"] || {}
     @groups = settings["groups"] || {}
     @is_web_connectivity_enabled = settings.fetch("isWebConnectivityEnabled", true)
+    @is_tracking_usage_enabled = settings.fetch("isMAU", false)
 
     process_features(settings)
     process_campaigns(settings)
@@ -97,5 +98,9 @@ class SettingsModel
 
   def get_is_web_connectivity_enabled
     @is_web_connectivity_enabled
+  end
+
+  def get_is_tracking_usage_enabled
+    @is_tracking_usage_enabled
   end
 end

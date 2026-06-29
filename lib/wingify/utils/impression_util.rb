@@ -64,3 +64,38 @@ def create_and_send_impression_for_variation_shown(settings, campaign_id, variat
     NetworkUtil.send_post_api_request(properties, payload, { campaign_type: campaign_type, feature_key: feature_key, campaign_key: campaign_key, variation_name: variation_name })
   end
 end
+
+# Sends the usage tracking payload to the server.
+# Called whenever a user is evaluated via get_flag() but no variation_shown event is dispatched.
+#
+# @param settings [SettingsModel] The settings model containing configuration.
+# @param context [ContextModel] The user context model.
+# @param is_tracking_usage_enabled [Boolean] Whether usage tracking is active.
+# @param feature_key [String] The key of the evaluated feature.
+def send_tracking_usage(settings, context, is_tracking_usage_enabled, feature_key)
+  return unless is_tracking_usage_enabled
+
+  # Construct payload data for tracking usage
+  payload = NetworkUtil.get_tracking_usage_payload_data(context)
+
+  # Get base properties for the event
+  properties = NetworkUtil.get_events_base_properties(
+    EventEnum::USER_EVALUATED,
+    URI.encode_www_form_component(context.get_user_agent), # Encode user agent for URL safety
+    context.get_ip_address
+  )
+  LoggerService.log(LogLevelEnum::INFO, "USAGE_TRACKING_DISPATCHED", {
+    accountId: settings.account_id,
+    userId: context.get_id,
+    featureKey: feature_key
+  })
+
+  # check if batching is enabled
+  if BatchEventsQueue.instance
+    # add the payload to the batch events queue
+    BatchEventsQueue.instance.enqueue(payload)
+  else
+    # Send the constructed payload via POST request
+    NetworkUtil.send_post_api_request(properties, payload)
+  end
+end

@@ -19,4 +19,5 @@ module EventEnum
     DEBUGGER_EVENT = 'vwo_sdkDebug'
     INIT_CALLED = 'vwo_fmeSdkInit'
     USAGE_STATS = 'vwo_sdkUsageStats'
+    USER_EVALUATED = 'vwo_feTrackUsage'
 end

@@ -40,6 +40,10 @@ class FlagApi
       rollout_variation_to_return = nil
       experiment_variation_to_return = nil
       should_check_for_experiments_rules = false
+      # Flag to check if variation shown event has been fired
+      is_variation_shown_fired = false
+      # Flag to check if tracking usage is enabled
+      is_tracking_usage_enabled = settings.get_is_tracking_usage_enabled
   
       passed_rules_information = {} # for storing integration callback
       evaluated_feature_map = {}
@@ -65,6 +69,8 @@ class FlagApi
     
             if variation
               LoggerService.log(LogLevelEnum::INFO, "STORED_VARIATION_FOUND", {variationKey: variation.get_key, userId: context.get_id, experimentKey: stored_data[:experiment_key], experimentType: "experiment"})
+              # Send usage tracking call when user is served from storage
+              send_tracking_usage(settings, context, is_tracking_usage_enabled, feature_key)
               return GetFlagResponse.new(true, variation.get_variables, context.get_uuid, context.get_session_id)
             end
           end
@@ -91,6 +97,8 @@ class FlagApi
   
       if feature.nil?
         LoggerService.log(LogLevelEnum::ERROR, "FEATURE_NOT_FOUND", {featureKey: feature_key, an: ApiEnum::GET_FLAG, sId: context.get_session_id, uuid: context.get_uuid})
+        # Send usage tracking call when feature is not found
+        send_tracking_usage(settings, context, is_tracking_usage_enabled, feature_key)
         return GetFlagResponse.new(false, [], context.get_uuid, context.get_session_id)
       end
   
@@ -106,6 +114,12 @@ class FlagApi
         rollout_rules.each do |rule|
           result = evaluate_rule(settings, feature, rule, context, evaluated_feature_map, nil, storage_service, decision)
           pre_segmentation_result = result[:pre_segmentation_result]
+          whitelisted_object = result[:whitelisted_object]
+          
+          if whitelisted_object.is_a?(Hash) && !whitelisted_object.empty?
+            is_variation_shown_fired = true
+          end
+
           updated_decision = result[:updated_decision]
           decision.merge!(updated_decision) if updated_decision
   
@@ -131,6 +145,8 @@ class FlagApi
             update_integrations_decision_object(passed_rollout_campaign, variation, passed_rules_information, decision)
   
             create_and_send_impression_for_variation_shown(settings, passed_rollout_campaign.get_id, variation.get_id, context, feature_key)
+            # set is_variation_shown_fired to true since we already sent variation shown call for rollout
+            is_variation_shown_fired = true
           end
         end
       elsif rollout_rules.empty?
@@ -147,11 +163,16 @@ class FlagApi
           result = evaluate_rule(settings, feature, rule, context, evaluated_feature_map, meg_group_winner_campaigns, storage_service, decision)
           pre_segmentation_result = result[:pre_segmentation_result]
           whitelisted_object = result[:whitelisted_object]
+          
+          if whitelisted_object.is_a?(Hash) && !whitelisted_object.empty?
+            is_variation_shown_fired = true
+          end
+
           updated_decision = result[:updated_decision]
           decision.merge!(updated_decision) if updated_decision
 
           if pre_segmentation_result
-            if whitelisted_object.nil?
+            if whitelisted_object.nil? || whitelisted_object.empty?
               experiment_rules_to_evaluate << rule
             else
               is_enabled = true
@@ -176,6 +197,8 @@ class FlagApi
             update_integrations_decision_object(campaign, variation, passed_rules_information, decision)
   
             create_and_send_impression_for_variation_shown(settings, campaign.get_id, variation.get_id, context, feature_key)
+            # set is_variation_shown_fired to true since we already sent variation shown call for experiment
+            is_variation_shown_fired = true
           end
         end
       end
@@ -216,8 +239,15 @@ class FlagApi
           context,
           feature_key
         )
+        # set is_variation_shown_fired to true since we already sent variation shown call for impact analysis
+        is_variation_shown_fired = true
       end
-  
+
+      # Send usage tracking call when no primary variation_shown event was dispatched.
+      # If a primary variation_shown event was fired, the server already has the usage tracking signal.
+      if !is_variation_shown_fired
+        send_tracking_usage(settings, context, is_tracking_usage_enabled, feature_key)
+      end
       # Return final evaluated feature flag
       return GetFlagResponse.new(is_enabled, experiment_variation_to_return&.get_variables || rollout_variation_to_return&.get_variables || [], context.get_uuid, context.get_session_id)
     end
