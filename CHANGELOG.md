@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.60.0] - 2026-06-29
+
+### Added
+
+- Support for **Web Testing pre-segmentation**: campaign segmentation can use the `campaignVariation` operand. The SDK evaluates it against **`context.platform_variables[:webTestingCampaigns]`**, a map of Web Testing campaign ID → variation ID (plain object or JSON string). Supported operand values in settings: `122` (user in campaign), `122_2` (exact variation), `122_!1` (in campaign but not variation 1), `!122` (not in campaign).
+
+    Example usage:
+    ```ruby
+    require 'wingify'
+
+    wingify_client = Wingify.init({
+      sdk_key: '32-alpha-numeric-sdk-key',
+      account_id: '123456'
+    })
+
+    # Pass the assigned web testing campaigns in the platform variables
+    context = {
+      id: 'user-123',
+      platformVariables: {
+        webTestingCampaigns: {
+          '122' => '2',
+          '101' => '1'
+        }
+      }
+    }
+    
+    # The flag will be evaluated based on the pre-segmentation conditions
+    flag = wingify_client.get_flag('feature-key', context)
+    ```
+
 ## [1.55.0] - 2026-06-15
 
 ### Added

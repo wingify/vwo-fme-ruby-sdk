@@ -80,7 +80,7 @@ Refer to the [official VWO documentation](https://developers.vwo.com/v2/docs/fme
 
 ### User Context
 
-The `context` object uniquely identifies users and is crucial for consistent feature rollouts. A typical `context` includes an `id` for identifying the user. It can also include other attributes that can be used for targeting and segmentation, such as `customVariables`, `userAgent` and `ipAddress`.
+The `context` object uniquely identifies users and is crucial for consistent feature rollouts. A typical `context` includes an `id` for identifying the user. It can also include other attributes that can be used for targeting and segmentation, such as `customVariables`, `userAgent`, `ipAddress`, and `platformVariables`.
 
 #### Parameters Table
 
@@ -99,9 +99,17 @@ The following table explains all the parameters in the `context` hash:
 ```ruby
 user_context = {
   id: 'unique_user_id',
-  customVariables: { age: 25, location: 'US' },
-  userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
-  ipAddress: '1.1.1.1'
+  userAgent: 'Mozilla/5.0 ...',
+  ipAddress: '1.2.3.4',
+  customVariables: {
+    'plan' => 'premium'
+  },
+  platformVariables: {
+    webTestingCampaigns: {
+      # this is example only, in production this will be sent from frontend to backend
+      '122' => '2'
+    }
+  }
 }
 ```
 

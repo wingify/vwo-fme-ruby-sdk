@@ -32,7 +32,7 @@ Legacy `VWO*` types on `vwo-fme-ruby-sdk` remain supported; they are thin aliase
 1. **Add the dependency** — use only the Wingify gem in your `Gemfile` (same semver you use on VWO today):
 
    ```ruby
-   gem 'wingify-fme-ruby-sdk', '~> 1.50.0'
+   gem 'wingify-fme-ruby-sdk', '~> 1.51.0'
    ```
 
 2. **Initialize** — call `Wingify.init(options)` with `account_id` and `sdk_key`. Returns a `WingifyClient`.
@@ -126,8 +126,8 @@ Event and API payload field names (for example `vwo_*` event names) are **unchan
 1. In your `Gemfile`, replace the dependency:
 
    ```diff
-   - gem 'vwo-fme-ruby-sdk', '~> 1.50.0'
-   + gem 'wingify-fme-ruby-sdk', '~> 1.50.0'
+   - gem 'vwo-fme-ruby-sdk', '~> 1.51.0'
+   + gem 'wingify-fme-ruby-sdk', '~> 1.51.0'
    ```
 
 2. Update requires:

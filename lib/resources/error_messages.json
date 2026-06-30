@@ -59,5 +59,9 @@
 
     "ERROR_EVALUATING_RULE": "Error occurred while evaluating rule. Error: {err}",
     "BATCH_FLUSH_FAILED": "Failed to send batch events. Re-enqueuing events for retry.",
-    "ERROR_PARSING_GATEWAY_URL": "Error occurred while parsing gateway service URL: {err}"
+    "ERROR_PARSING_GATEWAY_URL": "Error occurred while parsing gateway service URL: {err}",
+    
+    "INVALID_WEB_TESTING_CAMPAIGNS_DUPLICATE_KEY": "Duplicate campaignId found in webTestingCampaigns",
+    "INVALID_WEB_TESTING_CAMPAIGNS_JSON": "webTestingCampaigns provided in context is not a valid JSON string",
+    "INVALID_WEB_TESTING_CAMPAIGNS_TYPE": "webTestingCampaigns provided in context is of type {kind}, but must be of type string or object"
   }

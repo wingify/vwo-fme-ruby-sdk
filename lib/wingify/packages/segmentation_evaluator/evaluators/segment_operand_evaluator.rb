@@ -13,6 +13,7 @@
 # limitations under the License.
 
 require_relative '../utils/segment_util'
+require_relative '../utils/web_testing_segment_util'
 require_relative '../enums/segment_operand_value_enum'
 require_relative '../enums/segment_operand_regex_enum'
 require_relative '../enums/segment_operator_value_enum'
@@ -103,6 +104,22 @@ class SegmentOperandEvaluator
     processed_values = process_values(processed_operand[:operand_value], tag_value)
     tag_value = processed_values[:tag_value]
     extract_result(processed_operand[:operand_type], processed_values[:operand_value], tag_value)
+  end
+
+  # Evaluates Web Testing pre-segmentation against `context.platform_variables[:webTestingCampaigns]`.
+  # @param dsl_operand_value [String] The operand value to evaluate
+  # @param context [ContextModel] The context to evaluate the operand against
+  # @return [Boolean] True if the operand value matches the tag value, false otherwise
+  def evaluate_web_testing_campaign_variation_dsl(dsl_operand_value, context)
+    operand = dsl_operand_value.to_s.strip
+    assigned_variations_by_campaign_id = WebTestingSegmentUtil.parse_web_testing_campaigns_from_context(context)
+    result_obj = WebTestingSegmentUtil.evaluate_web_testing_campaign_variation(operand, assigned_variations_by_campaign_id)
+    
+    if result_obj[:invalid_format]
+      return false
+    end
+    
+    result_obj[:result]
   end
 
   # Evaluates a given string tag value against a DSL operand value.

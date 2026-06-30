@@ -43,6 +43,11 @@ module Wingify
                    .init_batch
 
     if options[:settings]
+      if SettingsSchema.new.is_settings_valid(options[:settings])
+        SettingsService.instance.is_settings_valid = true
+      else
+        LoggerService.log(LogLevelEnum::ERROR, "INVALID_SETTINGS_SCHEMA", { accountId: options[:account_id], sdkKey: options[:sdk_key], settings: options[:settings], an: ApiEnum::INIT}, false)
+      end
       return @@wingify_builder.build(options[:settings])
     end
 

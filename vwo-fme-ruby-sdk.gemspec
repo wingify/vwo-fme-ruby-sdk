@@ -1,7 +1,7 @@
 Gem::Specification.new do |spec|
     is_wingify = ENV['SDK_BRAND'] == 'wingify'
     spec.name          = is_wingify ? 'wingify-fme-ruby-sdk' : 'vwo-fme-ruby-sdk'
-    spec.version       = '1.50.0'
+    spec.version       = '1.60.0'
     spec.authors       = [is_wingify ? 'Wingify' : 'VWO']
     spec.email         = ['dev@wingify.com']
 

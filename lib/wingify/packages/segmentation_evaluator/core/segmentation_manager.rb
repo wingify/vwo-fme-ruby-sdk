@@ -24,6 +24,8 @@ require_relative '../../../services/settings_service'
 require_relative '../../../utils/data_type_util'
 require_relative '../../../enums/log_level_enum'
 require_relative '../../../enums/api_enum'
+require_relative '../enums/segment_operator_value_enum'
+
 class SegmentationManager
   @@instance = nil # Singleton instance
 
@@ -72,6 +74,43 @@ class SegmentationManager
   end
 
   def validate_segmentation(dsl, properties)
+    if has_campaign_variation_node?(dsl)
+      platform_vars = @evaluator.context&.get_platform_variables
+      web_testing_campaigns = platform_vars && (platform_vars[:webTestingCampaigns] || platform_vars['webTestingCampaigns'])
+      return false unless web_testing_campaigns
+    end
+
     @evaluator.is_segmentation_valid(dsl, properties)
+  end
+
+  private
+
+  # Checks if the provided DSL contains a campaign variation node.
+  # This is used to determine if web testing pre-segmentation should be evaluated.
+  #
+  # @param dsl [Hash] The DSL (Domain Specific Language) representing the segmentation rules.
+  # @return [Boolean] Returns true if a web campaign variation node is found, false otherwise.
+  def has_campaign_variation_node?(dsl)
+    # Return false immediately if the DSL is not a hash
+    return false unless dsl.is_a?(Hash)
+
+    # Iterate through each operator and operand in the DSL
+    dsl.each do |operator, operand|
+      # Check if the current operator matches the web campaign variation operator
+      return true if operator.to_s == SegmentOperatorValueEnum::WEB_CAMPAIGN_VARIATION
+
+      # If the operand is an array, recursively check each sub-DSL within it
+      if operand.is_a?(Array)
+        operand.each do |sub_dsl|
+          return true if has_campaign_variation_node?(sub_dsl)
+        end
+      # If the operand is a hash, recursively check the hash itself
+      elsif operand.is_a?(Hash)
+        return true if has_campaign_variation_node?(operand)
+      end
+    end
+    
+    # Return false if no campaign variation node is found in the entire DSL structure
+    false
   end
 end

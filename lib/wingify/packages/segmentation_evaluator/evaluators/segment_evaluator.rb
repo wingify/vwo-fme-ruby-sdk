@@ -57,6 +57,8 @@ class SegmentEvaluator
       SegmentOperandEvaluator.new.evaluate_custom_variable_dsl(sub_dsl, properties)
     when SegmentOperatorValueEnum::USER
       SegmentOperandEvaluator.new.evaluate_user_dsl(sub_dsl, properties)
+    when SegmentOperatorValueEnum::WEB_CAMPAIGN_VARIATION
+      SegmentOperandEvaluator.new.evaluate_web_testing_campaign_variation_dsl(sub_dsl, @context)
     when SegmentOperatorValueEnum::UA
       SegmentOperandEvaluator.new.evaluate_user_agent_dsl(sub_dsl, @context)
     when SegmentOperatorValueEnum::IP
